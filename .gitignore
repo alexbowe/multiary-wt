@@ -1,3 +1,5 @@
 ## OS Files ##
 .DS_Store
 
+## SCons ##
+.sconsign.dblite
