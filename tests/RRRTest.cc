@@ -12,9 +12,11 @@ TEST( RRR, popcount )
     unsigned int superblocksize = 3;
     RRR rrr = RRR(arity, blocksize, superblocksize);
     
-    //int values[] = {0, 1, 2, 0, 3, 0, 1, 2, 0, 1, 1};
+    RRR::symbol_t values[] = {0, 1, 2, 0, 3, 0, 1, 2, 0, 1, 1};
+    vector<RRR::symbol_t> v(values, values +
+        sizeof(values)/sizeof(RRR::symbol_t));
     
-    //RRRSequence s = rrr.build();
+    RRRSequence s = rrr.build(v);
 
     //for (unsigned int i = 0; i < length; i++)
     //{

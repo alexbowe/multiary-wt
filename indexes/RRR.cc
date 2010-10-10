@@ -2,6 +2,7 @@
 #include "Debug.h"
 
 #include <vector>
+#include <iostream>
 
 using namespace indexes;
 
@@ -12,25 +13,40 @@ RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
     // TODO: Init CountCube
 }
 
-RRRSequence RRR::build(const vector<symbol_t> & v)
+/** Builds RRR Sequence from input vector. */
+RRRSequence RRR::build(const vector<symbol_t> & seq)
 {
     size_type classNum, offset;
     vector<symbol_t> block(BLOCK_SIZE, 0);
     
-    // loop over in multiples of BLOCK_SIZE (pad with zeros)
-    int block_ind = 0;
+    // loop over in multiples of BLOCK_SIZE (padded with zeros)
+    size_type block_ind = 0;
     vector<symbol_t>::const_iterator it;
-    for (it = v::begin(); it != v::end(); it++)
+    for (it = seq.begin(); it != seq.end(); it++)
     {
-        // build buffer (vector)
-        block[block_ind] = *it;
+        // build buffer
+        block[block_ind++] = *it;
         
-        block_ind++;
-        if (element_counter == BLOCK_SIZE)
+        // Finished block?
+        // if block filled or if we got to the end of the vector...
+        if ( (block_ind == BLOCK_SIZE) || (it == seq.end()) )
         {
             // insert block into CountCube
             // counts.add(block, &classNum, &offset);
+            
+            // print it
+            vector<symbol_t>::iterator block_it;
+            for (block_it = block.begin(); block_it < block.end(); block_it++)
+                cout << *block_it << ", ";
+            cout << endl;
+            
             // add class to class sequence, offset to offset sequence
+            if ( it != seq.end() )
+            {
+                block_ind = 0;
+                // reset block to 0s...
+                block.assign(BLOCK_SIZE, 0);
+            }
         }
     }
     
