@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "common.h"
+
 using namespace std;
 
 namespace indexes
@@ -21,32 +23,21 @@ private:
 class RRR
 {
 public:
-    typedef unsigned int symbol_t;
-    typedef unsigned long size_type;
-    
-    // Pad blocks with this symbol if they don't allign perfectly
+    // Pad blocks with this symbol if they don't align perfectly
     static const symbol_t PAD_VALUE;
     
 private:
     const size_type ARITY;
-    // These should be const but may be initialised dynamically later
-    // so may change
     const size_type BLOCK_SIZE;
     const size_type SUPER_BLOCK_FACTOR;
     
-    // CountCube dims: class, offset, (symbol), position
-    // Mappers for offset and classes
-    
 public:
-    // these will have default values...
-    // Could create hash functions from the first 2...
     RRR(size_type arity, size_type block_size, size_type s_block_factor);
     
-    // RRR should take bools, chars, unsigned ints 32, and unsigned longs
-    // as input... maybe iterators...
-    RRRSequence build(const vector< symbol_t > & v);
+    RRRSequence build(const vector<symbol_t> & v);
     size_type rank(symbol_t symbol, size_type position, RRRSequence & seq)
         const;
+    // seal(); // delegates seal to countcube
 };
 
 } // end of namespace

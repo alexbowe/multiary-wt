@@ -1,13 +1,14 @@
-#include "RRR.h"
-#include "Debug.h"
-
 #include <vector>
 #include <iostream>
+
+#include "RRR.h"
+#include "debug.h"
+#include "common.h"
 
 using namespace indexes;
 
 // Pad blocks with 0 if they don't allign correctly
-const RRR::symbol_t RRR::PAD_VALUE = 0;
+const symbol_t RRR::PAD_VALUE = 0;
 
 /** Constructs a RRR of specified arity, block size and super block factor. */
 RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
@@ -36,12 +37,6 @@ RRRSequence RRR::build(const vector<symbol_t> & seq)
         {
             // insert block into CountCube
             // counts.add(block, &classNum, &offset);
-            
-            // print it
-            vector<symbol_t>::iterator block_it;
-            for (block_it = block.begin(); block_it < block.end(); block_it++)
-                cout << *block_it << ", ";
-            cout << endl;
             
             // Reset block to 0
             block.assign(BLOCK_SIZE, PAD_VALUE);
