@@ -5,3 +5,7 @@
 .sconsign.dblite
 
 data/*
+
+## Compiled stuff ##
+*.a
+*.o
