@@ -25,7 +25,11 @@ public:
     typedef unsigned long size_type;
     
 private:
+    // Pad blocks with 0 if they don't allign correctly
+    static const symbol_t PAD_VALUE = 0;
     const size_type ARITY;
+    // These should be const but may be initialised dynamically later
+    // so may change
     const size_type BLOCK_SIZE;
     const size_type SUPER_BLOCK_FACTOR;
     
