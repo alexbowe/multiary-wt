@@ -3,3 +3,5 @@
 
 ## SCons ##
 .sconsign.dblite
+
+data/*
