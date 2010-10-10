@@ -27,11 +27,11 @@ env.StaticLibrary(target = "CppUnitLite",
 
 # Unit Tests
 tests = env.Program("runtests", LIBS = ["CppUnitLite", "Indexes" ],
-    source=[ "unittests/TestRunner.cc", env.Glob("unittests/*Test.cc")])
+    source=[ "tests/TestRunner.cc", env.Glob("tests/*Test.cc")])
 # Run the unit tests as part of the build process
 env.AddPostAction(tests, "./runtests")
 env.AlwaysBuild(tests)
 env.Alias('test', tests)
 
 # Program
-prog = env.Program("main", LIBS = ["Indexes"], source = ["main.cc"])
+#prog = env.Program("main", LIBS = ["Indexes"], source = ["main.cc"])
