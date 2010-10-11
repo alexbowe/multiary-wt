@@ -2,32 +2,26 @@
 #define COUNTCUBE_H
 
 #include <vector>
-#include "boost/multi_array.hpp"
+#include "CountEntry.h"
 
 using namespace std;
 
 namespace indexes
 {
 
-// Mappers for offset and classes
-// Dimensions: [Class][Offset][Symbol][Position]
 class CountCube
 {
 private:
-    // array_type::extent_gen extents;
-    // array_type A(extents[3][3][3][3]);
+    // Dimensions: [Class][Offset]([Symbol][Position])
+    typedef vector<CountEntry> count_table_t;
+    vector<count_table_t> class_table;
     
-    // vector<ptrs to offset tables> class_table;
-    // offset table:
-    //  an array of counts...
-    //  for each symbol...
-    //  for each position...
-    //  Requires RESIZE along first axis... 
-    //  use 3D boost multi-array: offset (resized), symbol, position
+    const size_type arity;
+    const size_type blocksize;
 public:
-    //CountCube();
-    //bool add(const vector< symbol_t > & block, RRR::size_type & classNum,
-    //    RRR::size_type & offset);
+    CountCube();
+    void add(const vector< symbol_t > & block, size_type & classNum,
+        size_type & offset);
     // void seal(); // delete mappers
 };
 

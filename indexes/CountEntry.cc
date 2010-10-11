@@ -1,7 +1,4 @@
-#include <vector>
-
 #include "CountEntry.h"
-#include "debug.h"
 
 using namespace std;
 using namespace indexes;
@@ -12,6 +9,7 @@ CountEntry::CountEntry(vector<symbol_t> & block, size_type arity)
     
     counts = boost::shared_array<size_type>(new size_type[arity * blocksize]);
     
+    // cumulative sum for each symbol
     size_type count_index = 0;
     for ( size_type pos = 0; pos < blocksize; pos++ )
     {
@@ -28,11 +26,4 @@ CountEntry::CountEntry(vector<symbol_t> & block, size_type arity)
                 counts[count_index]++;
         }
     }
-}
-
-size_type CountEntry::rank(symbol_t sym, size_type pos, size_type blocksize,
-    size_type arity)
-{
-    size_type counts_index = sym * blocksize + pos;
-    return counts[counts_index];
 }

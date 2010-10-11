@@ -1,9 +1,7 @@
 #include <vector>
-#include <iostream>
 
 #include "RRR.h"
 #include "debug.h"
-#include "common.h"
 
 using namespace indexes;
 
