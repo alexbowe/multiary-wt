@@ -2,6 +2,7 @@
 
 #include "RRR.h"
 #include "debug.h"
+#include <iostream>
 
 using namespace indexes;
 
@@ -10,10 +11,8 @@ const symbol_t RRR::PAD_VALUE = 0;
 
 /** Constructs a RRR of specified arity, block size and super block factor. */
 RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
-    ARITY(arity), BLOCK_SIZE(block_size), SUPER_BLOCK_FACTOR(s_block_factor)
-{
-    // TODO: Init CountCube
-}
+    ARITY(arity), BLOCK_SIZE(block_size), SUPER_BLOCK_FACTOR(s_block_factor),
+        countCube(arity, block_size){}
 
 /** Builds RRR Sequence from input vector. */
 RRRSequence RRR::build(const sequence_t & seq)
@@ -34,7 +33,7 @@ RRRSequence RRR::build(const sequence_t & seq)
         if ( (block_ind == BLOCK_SIZE) || (it == seq.end()) )
         {
             // insert block into CountCube
-            // counts.add(block, &classNum, &offset);
+            countCube.add(block, classNum, offset);
             
             // Reset block to 0
             block.assign(BLOCK_SIZE, PAD_VALUE);
@@ -43,4 +42,10 @@ RRRSequence RRR::build(const sequence_t & seq)
     }
     
     return RRRSequence();
+}
+
+size_type RRR::rank(symbol_t symbol, size_type position, RRRSequence & seq)
+    const
+{
+    return 0;
 }
