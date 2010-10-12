@@ -16,7 +16,7 @@ TEST( RRR, popcount )
     //RRR::symbol_t values[] = { 0, 1, 2, 0, 3, 0, 1, 2, 0, 1, 1 };
     //vector<RRR::symbol_t> v(values, values +
         //sizeof(values)/sizeof(RRR::symbol_t));
-    vector<symbol_t> v(2 * blocksize, 1);
+    sequence_t v(2 * blocksize, 1);
     
     RRRSequence s = rrr.build(v);
 

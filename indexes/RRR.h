@@ -34,7 +34,7 @@ private:
 public:
     RRR(size_type arity, size_type block_size, size_type s_block_factor);
     
-    RRRSequence build(const vector<symbol_t> & v);
+    RRRSequence build(const sequence_t & seq);
     size_type rank(symbol_t symbol, size_type position, RRRSequence & seq)
         const;
     // seal(); // delegates seal to countcube

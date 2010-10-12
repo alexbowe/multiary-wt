@@ -16,14 +16,14 @@ RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
 }
 
 /** Builds RRR Sequence from input vector. */
-RRRSequence RRR::build(const vector<symbol_t> & seq)
+RRRSequence RRR::build(const sequence_t & seq)
 {
     size_type classNum, offset;
-    vector<symbol_t> block(BLOCK_SIZE, PAD_VALUE);
+    sequence_t block(BLOCK_SIZE, PAD_VALUE);
     
     // loop over in multiples of BLOCK_SIZE (padded with zeros)
     size_type block_ind = 0;
-    vector<symbol_t>::const_iterator it;
+    sequence_t::const_iterator it;
     for (it = seq.begin(); it != seq.end(); )
     {
         // build buffer

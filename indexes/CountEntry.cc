@@ -3,7 +3,7 @@
 using namespace std;
 using namespace indexes;
 
-CountEntry::CountEntry(vector<symbol_t> & block, size_type arity)
+CountEntry::CountEntry(const sequence_t & block, size_type arity)
 {
     size_type blocksize = block.size();
     

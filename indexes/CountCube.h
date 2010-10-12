@@ -2,7 +2,9 @@
 #define COUNTCUBE_H
 
 #include <vector>
+#include "common.h"
 #include "CountEntry.h"
+#include "IndexMapper.h"
 
 using namespace std;
 
@@ -12,15 +14,20 @@ namespace indexes
 class CountCube
 {
 private:
+    const size_type ARITY;
+    const size_type BLOCK_SIZE;
+    
     // Dimensions: [Class][Offset]([Symbol][Position])
     typedef vector<CountEntry> count_table_t;
     vector<count_table_t> class_table;
     
-    const size_type arity;
-    const size_type blocksize;
+    
+    IndexMapper< sequence_t > mapClass;
+    IndexMapper< sequence_t > mapBlock;
+    
 public:
-    CountCube();
-    void add(const vector< symbol_t > & block, size_type & classNum,
+    CountCube(size_type arity, size_type blocksize);
+    bool add(const sequence_t & block, size_type & classNum,
         size_type & offset);
     // void seal(); // delete mappers
 };
