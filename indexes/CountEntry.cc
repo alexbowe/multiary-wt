@@ -1,3 +1,4 @@
+#include <cstring>
 #include "CountEntry.h"
 
 using namespace std;
@@ -5,9 +6,12 @@ using namespace indexes;
 
 CountEntry::CountEntry(const sequence_t & block, size_type arity)
 {
-    size_type blocksize = block.size();
+    const size_type blocksize(block.size());
     
     counts = boost::shared_array<size_type>(new size_type[arity * blocksize]);
+    
+    for (size_type i = 0; i < blocksize * arity; i++)
+        counts[i] = 0;
     
     // cumulative sum for each symbol
     size_type count_index = 0;
@@ -15,7 +19,7 @@ CountEntry::CountEntry(const sequence_t & block, size_type arity)
     {
         symbol_t block_symbol = block[pos];
         
-        for ( symbol_t sym = 0; sym < arity; sym++)
+        for ( symbol_t sym = 0; sym < static_cast<symbol_t>(arity); sym++)
         {
             count_index = sym * blocksize + pos;
             if (pos > 0)
@@ -27,3 +31,4 @@ CountEntry::CountEntry(const sequence_t & block, size_type arity)
         }
     }
 }
+

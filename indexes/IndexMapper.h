@@ -14,7 +14,7 @@ namespace indexes
         map<T, size_type> hashes;
     public:
         IndexMapper() : count(0), hashes() {}
-        size_type operator ()(T item)
+        size_type operator ()(const T item)
         {
             if (hashes.count(item) > 0)
             {
