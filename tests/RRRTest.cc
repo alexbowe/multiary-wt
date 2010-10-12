@@ -11,20 +11,22 @@ TEST( RRR, popcount )
     unsigned int blocksize = 5;
     unsigned int superblocksize = 3;
     
-    RRR rrr = RRR(arity, blocksize, superblocksize);
+    RRR rrr(arity, blocksize, superblocksize);
     
-    //RRR::symbol_t values[] = { 0, 1, 2, 0, 3, 0, 1, 2, 0, 1, 1 };
-    //vector<RRR::symbol_t> v(values, values +
-        //sizeof(values)/sizeof(RRR::symbol_t));
-    sequence_t v(2 * blocksize, 1);
+    #define N 10
     
-    RRRSequence s = rrr.build(v);
-
-    //for (unsigned int i = 0; i < length; i++)
-    //{
-    //    CHECK(wt.rank('a', i) == a_ranks[i]);
-    //    CHECK(wt.rank('b', i) == b_ranks[i]);
-    //    CHECK(wt.rank('c', i) == c_ranks[i]);
-    //}
-    CHECK(true);
+    symbol_t values[N]    =  { 0, 1, 2, 0, 3, 0, 1, 2, 0, 1 };
+    size_type counts[][N] ={ { 1, 1, 1, 2, 2, 3, 3, 3, 4, 4 },
+                             { 0, 1, 1, 1, 1, 1, 2, 2, 2, 3 },
+                             { 0, 0, 1, 1, 1, 1, 1, 2, 2, 2 },
+                             { 0, 0, 0, 0, 1, 1, 1, 1, 1, 1 } };
+    sequence_t v(values);
+    
+    RRRSequence rrrseq = rrr.build(v);
+    
+    for (symbol_t sym = 0; sym < static_cast<symbol_t>(arity); sym++)
+    {
+        for (size_type pos = 0; pos < N; pos++)
+            CHECK(rrr.rank(sym, pos, rrrseq) == counts[sym][pos]);
+    }
 }
