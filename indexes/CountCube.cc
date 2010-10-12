@@ -16,9 +16,10 @@ void CountCube::seal()
 {
     classMapper.reset();
     blockMappers.clear();
+    vector< shared_ptr<Mapper> >().swap(blockMappers);
 }
 
-bool CountCube::add(const sequence_t block, size_type & classNum,
+bool CountCube::add(const sequence_t & block, size_type & classNum,
     size_type & offset)
 {
     // have we sealed the countcube?

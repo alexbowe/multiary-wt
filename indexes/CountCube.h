@@ -22,7 +22,8 @@ private:
     
     // Dimensions: [Class][Offset]([Symbol][Position])
     typedef vector<CountEntry> count_table_t;
-    vector<count_table_t> class_table;
+    typedef shared_ptr<count_table_t> count_table_ptr;
+    vector<count_table_ptr> class_table;
     
     typedef IndexMapper<sequence_t> Mapper;
     // maybe should pass these in so don't need to seal() it after...
@@ -35,7 +36,7 @@ private:
 public:
     CountCube(size_type arity, size_type blocksize);
     void seal(); // delete mappers
-    bool add(const sequence_t block, size_type & classNum,
+    bool add(const sequence_t & block, size_type & classNum,
         size_type & offset);
     size_type rank(size_type classNum, size_type offset, symbol_t symbol,
         size_type position);
