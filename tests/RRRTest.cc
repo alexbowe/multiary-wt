@@ -31,7 +31,6 @@ TEST( RRR, popcount )
     
     for (symbol_t sym = 0; sym < static_cast<symbol_t>(arity); sym++)
     {
-        
         for (size_type pos = 0; pos < N; pos++)
         {
             size_type result = rrr.rank(sym, pos, rrrseq);
