@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "boost/shared_array.hpp"
 #include "common.h"
 #include "CountCube.h"
 
@@ -14,15 +15,21 @@ namespace indexes
 class RRRSequence
 {
 private:
-    //friend class RRR;
+    friend class RRR;
+    //shared_array i manipulate myself (using the stuff in basics.h)
     // orrrr dynamic_bitset
-    boost::shared_array<int> classes;
+    vector<int> classes;
     // prefix sum (on bits) for offsets
-    boost::shared_array<int> prefix_sum;
-    boost::shared_array<int> offsets;
+    //boost::shared_array<int> prefix_sum;
+    vector<int> offsets;
     // shared ptr of 2D array: intermediate counts per block (but do some
-    boost::shared_array<int> count_block; // per symbol per block per superblock
     // math to get superblock limit ones...)
+    typedef boost::shared_array<int> inter_t;
+    inter_t intermediates;
+    
+    RRRSequence(const vector<int> & classes_in, const vector<int> & offsets_in,
+        const size_type arity, const size_type blocksize,
+        const size_type s_block_factor, const CountCube & cc);
 };
 
 class RRR
@@ -41,8 +48,8 @@ public:
     RRR(size_type arity, size_type block_size, size_type s_block_factor);
     
     RRRSequence build(const sequence_t & seq);
-    size_type rank(symbol_t symbol, size_type position, RRRSequence & seq)
-        const;
+    size_type rank(symbol_t symbol, size_type position,
+        const RRRSequence & seq) const;
     inline void seal() { countCube.seal(); }
 };
 

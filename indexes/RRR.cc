@@ -1,8 +1,11 @@
 #include <vector>
+#include <cmath>
+#include <iostream>
 
 #include "RRR.h"
 #include "debug.h"
-#include <iostream>
+
+#include "utility.h"
 
 using namespace indexes;
 
@@ -11,18 +14,27 @@ const symbol_t RRR::PAD_VALUE = 0;
 
 /** Constructs a RRR of specified arity, block size and super block factor. */
 RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
-    ARITY(arity), BLOCK_SIZE(block_size), SUPER_BLOCK_FACTOR(s_block_factor),
-        countCube(arity, block_size){}
+    ARITY(arity),
+    BLOCK_SIZE(block_size),
+    SUPER_BLOCK_FACTOR(s_block_factor),
+    countCube(arity, block_size) {}
 
 /** Builds RRR Sequence from input vector. */
 RRRSequence RRR::build(const sequence_t & seq)
 {
+    TRACE(("[RRR.build]\n"));
     size_type classNum, offset;
     sequence_t block(BLOCK_SIZE, PAD_VALUE);
+    
+    vector<int> classes = vector<int>();
+    vector<int> offsets = vector<int>();
     
     // loop over in multiples of BLOCK_SIZE (padded with zeros)
     size_type block_ind = 0;
     sequence_t::const_iterator it;
+    
+    // shouldn't be calling with an empty sequence
+    myAssert(seq.begin() != seq.end());
     for (it = seq.begin(); it != seq.end(); )
     {
         // build buffer
@@ -35,17 +47,61 @@ RRRSequence RRR::build(const sequence_t & seq)
             // insert block into CountCube
             countCube.add(block, classNum, offset);
             
+            // add to the classes and offsets vectors...
+            classes.push_back(classNum);
+            offsets.push_back(offset);
+            
             // Reset block to 0
             block.assign(BLOCK_SIZE, PAD_VALUE);
             block_ind = 0;
         }
     }
     
-    return RRRSequence();
+    return RRRSequence(classes, offsets, ARITY, BLOCK_SIZE,
+        SUPER_BLOCK_FACTOR, countCube);
 }
 
-size_type RRR::rank(symbol_t symbol, size_type position, RRRSequence & seq)
-    const
+size_type RRR::rank(symbol_t symbol, size_type position,
+    const RRRSequence & seq) const
 {
     return 0;
+}
+
+RRRSequence::RRRSequence(const vector<int> & classes_in,
+    const vector<int> & offsets_in, const size_type arity,
+    const size_type blocksize, const size_type s_block_factor, const CountCube
+    & cc) :
+    // these will have to be constructed in smarter ways :)
+    // like, store a number to say how many bit are required for the classes?
+    // and packing the offsets
+    classes(classes_in), offsets(offsets_in)
+{
+    // these really must be the same length...
+    myAssert(classes.size() == offsets.size());
+    
+    const unsigned int size(classes.size());
+    const int num_super_blocks(ceil(size / (float)s_block_factor));
+    TRACE(( "[RRRSequence.CTOR] Num Super Blocks: %d\n", num_super_blocks ));
+    
+    intermediates = inter_t(new int[arity * num_super_blocks * s_block_factor]);
+    
+    // Z = sym (arity)
+    // Y = super block (num_super_blocks)
+    // X = block (s_block_factor) // arranged this way for caching
+    
+    // Populate intermediates table
+    /*for (size_type sym = 0; sym < arity; sym++)
+    {
+        for (size_type super_b = 0; super_b < num_super_blocks; super_b++)
+        {
+            for (size_type block_idx = 0; block < s_block_factor
+                block++)
+            {
+                
+            }
+        }
+    }*/
+    // do in this order: x, y, z
+    // get last value in block
+    cc.rank(classNum, offset, sym, blocksize - 1);
 }
