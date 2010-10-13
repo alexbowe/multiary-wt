@@ -21,17 +21,19 @@ private:
     const size_type BLOCK_SIZE;
     
     // Dimensions: [Class][Offset]([Symbol][Position])
+    // maybe should use boost ptr_vector
     typedef vector<CountEntry> count_table_t;
     typedef shared_ptr<count_table_t> count_table_ptr;
     vector<count_table_ptr> class_table;
     
     typedef IndexMapper<sequence_t> Mapper;
+    typedef shared_ptr<Mapper> Mapper_ptr;
     // maybe should pass these in so don't need to seal() it after...
     // inside a { } block so their destructors are called...
     // not a good idea since it makes calling it from the client 
-    // really hard...
-    vector< shared_ptr<Mapper> > blockMappers;
-    auto_ptr<Mapper> classMapper;
+    // harder...
+    vector< Mapper_ptr > blockMappers;
+    Mapper_ptr classMapper;
     
 public:
     CountCube(size_type arity, size_type blocksize);
