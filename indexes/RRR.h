@@ -27,9 +27,14 @@ private:
     typedef boost::shared_array<int> inter_t;
     inter_t intermediates;
     
+    size_type num_super_blocks;
+    
     RRRSequence(const vector<int> & classes_in, const vector<int> & offsets_in,
         const size_type arity, const size_type blocksize,
         const size_type s_block_factor, const CountCube & cc);
+        
+    size_type rank(symbol_t sym, size_type pos, size_type blocksize,
+        const size_type s_block_factor, const CountCube & cc) const;
 };
 
 class RRR
@@ -48,8 +53,12 @@ public:
     RRR(size_type arity, size_type block_size, size_type s_block_factor);
     
     RRRSequence build(const sequence_t & seq);
-    size_type rank(symbol_t symbol, size_type position,
-        const RRRSequence & seq) const;
+    inline size_type rank(symbol_t symbol, size_type position,
+        const RRRSequence & seq) const
+    {
+        return seq.rank(symbol, position, BLOCK_SIZE, SUPER_BLOCK_FACTOR,
+            countCube);
+    }
     inline void seal() { countCube.seal(); }
 };
 

@@ -61,14 +61,6 @@ RRRSequence RRR::build(const sequence_t & seq)
         SUPER_BLOCK_FACTOR, countCube);
 }
 
-size_type RRR::rank(symbol_t symbol, size_type position,
-    const RRRSequence & seq) const
-{
-    // TODO : update this so its not so stupid
-    int a = sizeof(symbol); a=sizeof(position); a=sizeof(seq);
-    return 0;
-}
-
 RRRSequence::RRRSequence(const vector<int> & classes_in,
     const vector<int> & offsets_in, const size_type arity,
     const size_type blocksize, const size_type s_block_factor, const CountCube
@@ -82,12 +74,12 @@ RRRSequence::RRRSequence(const vector<int> & classes_in,
     myAssert(classes.size() == offsets.size());
     
     const unsigned int NUM_BLOCKS(classes.size());
-    const int num_super_blocks(ceil(NUM_BLOCKS / (float)s_block_factor));
+    num_super_blocks = ceil(NUM_BLOCKS / (float) s_block_factor);
     TRACE(( "[RRRSequence.CTOR] Num Super Blocks: %d\n", num_super_blocks ));
     
     // Z = sym (arity)
     // Y = super block (num_super_blocks)
-    // X = block (s_block_factor) // arranged this way for caching
+    // X = block (s_block_factor) - arranged this way for caching
     intermediates = inter_t(new int[arity * num_super_blocks * s_block_factor]);
     
     // Populate intermediates table
@@ -111,7 +103,9 @@ RRRSequence::RRRSequence(const vector<int> & classes_in,
             
             // update running totals for super-block
             totals[sym] += rank;
-            intermediates[0] = totals[sym];
+            size_type intermediate_idx = get3DIdx(s_block_factor,
+                num_super_blocks, block_idx, super_block_idx, sym);
+            intermediates[intermediate_idx] = totals[sym];
         }
         
         // Super block boundary:
@@ -121,4 +115,44 @@ RRRSequence::RRRSequence(const vector<int> & classes_in,
             totals.assign(arity, 0);
         }
     }
+}
+
+size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
+    const size_type s_block_factor, const CountCube & cc) const
+{
+    size_type sym_idx = pos % blocksize;
+    size_type global_block_idx = pos / blocksize;
+    size_type super_block_idx = global_block_idx / s_block_factor;
+    size_type block_idx = global_block_idx % s_block_factor;
+    
+    TRACE(("[RRRSequence.rank] Symbol Idx: %d\n", sym_idx));
+    TRACE(("[RRRSequence.rank] Block: %d\n", block_idx));
+    TRACE(("[RRRSequence.rank] Super Block: %d\n", super_block_idx));
+    
+    size_type count = 0;
+    
+    size_type inter_idx = 0;
+    for (size_type i = 0; i < super_block_idx; i++)
+    {
+        TRACE(("[RRRSequence.rank] i: %d\n", i));
+        // last block for every super block previous to this one
+        inter_idx = get3DIdx(s_block_factor, num_super_blocks,
+            s_block_factor - 1, i, sym);
+        count += intermediates[inter_idx];
+    }
+    
+    // look up prev block pos
+    if (block_idx > 0)
+    {
+        inter_idx = get3DIdx(s_block_factor, num_super_blocks,
+            block_idx - 1, super_block_idx, sym);
+        count += intermediates[inter_idx];
+    }
+    
+    // look up current block pos using CountCube
+    count += cc.rank(classes[global_block_idx],
+        offsets[global_block_idx], sym, sym_idx);
+    
+    TRACE(("[RRRSequence.rank] Count: %d\n", count));
+    return count;
 }
