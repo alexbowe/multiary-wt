@@ -1,6 +1,7 @@
 #include "CppUnitLite/TestHarness.h"
 #include "indexes/RRR.h"
-#include <vector>
+
+#include "indexes/debug.h"
 
 using namespace std;
 using namespace indexes;
@@ -20,9 +21,11 @@ TEST( RRR, popcount )
                              { 0, 1, 1, 1, 1, 1, 2, 2, 2, 3 },
                              { 0, 0, 1, 1, 1, 1, 1, 2, 2, 2 },
                              { 0, 0, 0, 0, 1, 1, 1, 1, 1, 1 } };
-    sequence_t v(values);
+    sequence_t v(values, N);
     
+    TRACE(("Building\n"));
     RRRSequence rrrseq = rrr.build(v);
+    TRACE(("Finished\n"));
     
     for (symbol_t sym = 0; sym < static_cast<symbol_t>(arity); sym++)
     {
