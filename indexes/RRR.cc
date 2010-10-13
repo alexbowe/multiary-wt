@@ -64,6 +64,8 @@ RRRSequence RRR::build(const sequence_t & seq)
 size_type RRR::rank(symbol_t symbol, size_type position,
     const RRRSequence & seq) const
 {
+    // TODO : update this so its not so stupid
+    int a = sizeof(symbol); a=sizeof(position); a=sizeof(seq);
     return 0;
 }
 
@@ -79,29 +81,44 @@ RRRSequence::RRRSequence(const vector<int> & classes_in,
     // these really must be the same length...
     myAssert(classes.size() == offsets.size());
     
-    const unsigned int size(classes.size());
-    const int num_super_blocks(ceil(size / (float)s_block_factor));
+    const unsigned int NUM_BLOCKS(classes.size());
+    const int num_super_blocks(ceil(NUM_BLOCKS / (float)s_block_factor));
     TRACE(( "[RRRSequence.CTOR] Num Super Blocks: %d\n", num_super_blocks ));
-    
-    intermediates = inter_t(new int[arity * num_super_blocks * s_block_factor]);
     
     // Z = sym (arity)
     // Y = super block (num_super_blocks)
     // X = block (s_block_factor) // arranged this way for caching
+    intermediates = inter_t(new int[arity * num_super_blocks * s_block_factor]);
     
     // Populate intermediates table
-    /*for (size_type sym = 0; sym < arity; sym++)
+    
+    // declare running total vector
+    vector<int> totals(arity, 0);
+    // for each (C, O) at i:
+    for (size_type i = 0; i < NUM_BLOCKS; i++)
     {
-        for (size_type super_b = 0; super_b < num_super_blocks; super_b++)
+        // superblock i/s_block_factor
+        size_type super_block_idx = i / s_block_factor;
+        size_type block_idx  = i % s_block_factor;
+        size_type classNum = classes[i];
+        size_type offset = offsets[i];
+        
+        // get last value in block, for each symbol
+        for (size_type sym = 0; sym < arity; sym++)
         {
-            for (size_type block_idx = 0; block < s_block_factor
-                block++)
-            {
-                
-            }
+            size_type rank = cc.rank(classNum, offset, sym, 
+                blocksize - 1);
+            
+            // update running totals for super-block
+            totals[sym] += rank;
+            intermediates[0] = totals[sym];
         }
-    }*/
-    // do in this order: x, y, z
-    // get last value in block
-    cc.rank(classNum, offset, sym, blocksize - 1);
+        
+        // Super block boundary:
+        if (i != 0 && block_idx == 0)
+        {
+            // reset running total
+            totals.assign(arity, 0);
+        }
+    }
 }

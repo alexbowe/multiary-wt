@@ -53,7 +53,7 @@ bool CountCube::add(const sequence_t & block, size_type & classNum,
 }
 
 size_type CountCube::rank(size_type classNum, size_type offset,
-    symbol_t symbol, size_type position)
+    symbol_t symbol, size_type position) const
 {
     return class_table.at(classNum)->at(offset).rank(symbol, position,
         BLOCK_SIZE);

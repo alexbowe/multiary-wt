@@ -41,7 +41,7 @@ public:
     bool add(const sequence_t & block, size_type & classNum,
         size_type & offset);
     size_type rank(size_type classNum, size_type offset, symbol_t symbol,
-        size_type position);
+        size_type position) const;
 };
 
 } // end of namespace
