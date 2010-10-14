@@ -35,6 +35,9 @@ private:
         
     size_type rank(symbol_t sym, size_type pos, size_type blocksize,
         const size_type s_block_factor, const CountCube & cc) const;
+public:
+    // empty constructor for us to hold in our outer vector
+    RRRSequence();
 };
 
 class RRR

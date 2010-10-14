@@ -9,3 +9,9 @@ data/*
 ## Compiled stuff ##
 *.a
 *.o
+main
+runtests
+
+## Stuff I don't want to add just yet ##
+deps/*
+main.cc

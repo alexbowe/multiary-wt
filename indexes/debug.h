@@ -34,4 +34,36 @@
     #define TRACE(msg)
 #endif
 
+#if DEBUG
+    #include <cstdio>
+    #include <string>
+    template <class T>
+    inline void trace_seq_impl(const std::basic_string<T> & seq, char* fmt)
+    {
+        unsigned long length = seq.length();
+        for (unsigned long i = 0; i< length; i++)
+        {
+            fprintf(stderr, fmt, seq[i]);
+            if (strcmp(fmt, "%d") == 0 && i < length - 1)
+                fprintf(stderr, ", ");;
+        }
+        fprintf(stderr, "\n");
+    }
+    // don't print commas for chars
+    inline void trace_seq_impl(const basic_string<char> & seq)
+    {
+        char fmt[] = {'%', 'c', '\0'};
+        trace_seq_impl(seq, fmt);
+    }
+    inline void trace_seq_impl(const basic_string<int> & seq)
+    {
+        char fmt[] = {'%', 'd', '\0'};
+        trace_seq_impl(seq, fmt);
+    }
+    
+    #define TRACE_SEQ(seq) trace_seq_impl seq
+#else
+    #define TRACE_SEQ(seq)
+#endif
+
 #endif /* end of include guard */
