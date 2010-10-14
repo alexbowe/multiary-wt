@@ -96,6 +96,14 @@ RRRSequence::RRRSequence(const vector<int> & classes_in,
         size_type classNum = classes[i];
         size_type offset = offsets[i];
         
+        // Super block boundary:
+        if (i > 0 && block_idx == 0)
+        {
+            //TRACE(("RESETING\n"));
+            // reset running total
+            totals.assign(arity, 0);
+        }
+        
         // get last value in block, for each symbol
         for (size_type sym = 0; sym < arity; sym++)
         {
@@ -107,13 +115,8 @@ RRRSequence::RRRSequence(const vector<int> & classes_in,
             size_type intermediate_idx = get3DIdx(s_block_factor,
                 num_super_blocks, block_idx, super_block_idx, sym);
             intermediates[intermediate_idx] = totals[sym];
-        }
-        
-        // Super block boundary:
-        if (i != 0 && block_idx == 0)
-        {
-            // reset running total
-            totals.assign(arity, 0);
+            //TRACE(("S%d b%d %d: %d\n", super_block_idx, block_idx, sym,
+            //    totals[sym]));
         }
     }
 }
@@ -141,18 +144,23 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
             s_block_factor - 1, i, sym);
         count += intermediates[inter_idx];
     }
+    //TRACE(("Count(1): %d\n", count));
     
     // look up prev block pos
     if (block_idx > 0)
     {
+        //TRACE(("DOING SOMETHING DANGEROUS!\n"));
         inter_idx = get3DIdx(s_block_factor, num_super_blocks,
             block_idx - 1, super_block_idx, sym);
         count += intermediates[inter_idx];
     }
+    //TRACE(("Count(2): %d\n", count));
     
-    // look up current block pos using CountCube
-    count += cc.rank(classes[global_block_idx],
+    size_type cc_count = cc.rank(classes[global_block_idx],
         offsets[global_block_idx], sym, sym_idx);
+    //TRACE(("FROM CC: %d\n", cc_count));
+    // look up current block pos using CountCube
+    count += cc_count;
     
     //TRACE(("[RRRSequence.rank] Count: %d\n", count));
     return count;
