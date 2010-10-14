@@ -5,8 +5,6 @@
 #include "WTTestHelpers.h"
 
 using namespace std;
-using namespace indexes;
-
 
 // TESTS BEGIN BEBE
 

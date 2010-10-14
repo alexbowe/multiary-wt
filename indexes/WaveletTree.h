@@ -28,12 +28,14 @@ private:
     const size_type ARITY;
     
     RRR rrr;
-    wt_sequence_t alphabet;
+    const wt_sequence_t ALPHABET;
     encoding_heap_t encoding;
     
     void encodeNodeRecursive(const wt_sequence_t & sequence,
         const wt_sequence_t & alphabet, size_type nodeIdx);
     
+    size_type rankRecursive(T symbol, size_type index,
+        const wt_sequence_t & alphabet, size_type nodeIdx) const;
 public:
     WaveletTree(const wt_sequence_t & sequence, size_type arity,
         size_type block_size, size_type s_block_factor);
@@ -44,24 +46,23 @@ template <class T>
 WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
     size_type block_size, size_type s_block_factor) : 
     ARITY(arity),
-    rrr(arity, block_size, s_block_factor)
+    rrr(arity, block_size, s_block_factor),
+    ALPHABET(getAlphabet(sequence))
 {
-    alphabet = getAlphabet(sequence);
-    
     TRACE(("[WaveletTree.CTOR] Input:    "));
     TRACE_SEQ((sequence));
     TRACE(("[WaveletTree.CTOR] Alphabet: "));
-    TRACE_SEQ((alphabet));
+    TRACE_SEQ((ALPHABET));
     
     // WT should always be balanced by definition
-    size_type numLevels = getNumSymbolsRequired(alphabet.length(), ARITY);
+    size_type numLevels = getNumSymbolsRequired(ALPHABET.length(), ARITY);
     size_type numNodes = getNumBalancedTreeNodes(numLevels, ARITY);
     TRACE(("[WaveletTree.CTOR] numLevels: %d\n", numLevels));
     TRACE(("[WaveletTree.CTOR] numNodes: %d\n", numNodes));
     
     encoding = encoding_heap_t(numNodes);
     
-    encodeNodeRecursive(sequence, alphabet);
+    encodeNodeRecursive(sequence, ALPHABET);
 }
 
 template <class T>
@@ -97,9 +98,15 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
 }
 
 template <class T>
-size_type WaveletTree<T>::rank(T symbol, size_type index) const
+inline size_type WaveletTree<T>::rank(T symbol, size_type index) const
 {
-    //rrr.rank(symbol, index, rrrseq);
+    // could check that symbol is in alphabet too at runtime...
+    return rankRecursive(symbol, index, ALPHABET);
+}
+
+template <class T>
+size_type WaveletTree<T>::rankRecursive(T symbol, size_type index, const wt_sequence_t & alphabet, size_type nodeIdx = 0) const
+{
     return 0;
 }
 
