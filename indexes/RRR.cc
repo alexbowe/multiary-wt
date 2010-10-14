@@ -1,10 +1,10 @@
+#include "RRR.h"
+
 #include <vector>
 #include <cmath>
 #include <iostream>
 
-#include "RRR.h"
 #include "debug.h"
-
 #include "utility.h"
 
 using namespace indexes;

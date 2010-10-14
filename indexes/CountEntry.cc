@@ -1,5 +1,5 @@
-#include <cstring>
 #include "CountEntry.h"
+#include <cstring>
 
 using namespace std;
 using namespace indexes;

@@ -1,8 +1,8 @@
 #include "CountCube.h"
-
 #include "debug.h"
 
 using namespace std;
+using namespace boost;
 using namespace indexes;
 
 CountCube::CountCube(size_type arity, size_type blocksize) : ARITY(arity),
@@ -10,13 +10,6 @@ CountCube::CountCube(size_type arity, size_type blocksize) : ARITY(arity),
 {
     classMapper = Mapper_ptr(new Mapper());
     blockMappers = vector<Mapper_ptr>();
-}
-
-void CountCube::seal()
-{
-    classMapper.reset();
-    blockMappers.clear();
-    vector< shared_ptr<Mapper> >().swap(blockMappers);
 }
 
 bool CountCube::add(const sequence_t & block, size_type & classNum,
@@ -50,11 +43,4 @@ bool CountCube::add(const sequence_t & block, size_type & classNum,
     // by this point it's already in the table...
     
     return true;
-}
-
-size_type CountCube::rank(size_type classNum, size_type offset,
-    symbol_t symbol, size_type position) const
-{
-    return (*class_table[classNum])[offset].rank(symbol, position,
-        BLOCK_SIZE);
 }
