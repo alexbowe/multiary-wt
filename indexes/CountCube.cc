@@ -29,14 +29,14 @@ bool CountCube::add(const sequence_t & block, size_type & classNum,
     sequence_t c = getClass(block, ARITY);
     
     classNum = (*classMapper)(c);
-    TRACE(("[CountCube.add] Class: %d\n", classNum));
+    //TRACE(("[CountCube.add] Class: %d\n", classNum));
     
     // If we don't currently have a blockMapper for this class, add one
     if ( classNum >= blockMappers.size())
         blockMappers.push_back(shared_ptr<Mapper>(new Mapper()));
 
     offset = (*blockMappers[classNum])(block);
-    TRACE(("[CountCube.add] Offset: %d\n", offset));
+    //TRACE(("[CountCube.add] Offset: %d\n", offset));
     
     // represent the block in the cube...
     // if the class isn't already represented in the class_table...

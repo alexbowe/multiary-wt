@@ -22,7 +22,6 @@ RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
 /** Builds RRR Sequence from input vector. */
 RRRSequence RRR::build(const sequence_t & seq)
 {
-    TRACE(("[RRR.build]\n"));
     size_type classNum, offset;
     sequence_t block(BLOCK_SIZE, PAD_VALUE);
     
@@ -75,7 +74,7 @@ RRRSequence::RRRSequence(const vector<int> & classes_in,
     
     const unsigned int NUM_BLOCKS(classes.size());
     num_super_blocks = ceil(NUM_BLOCKS / (float) s_block_factor);
-    TRACE(( "[RRRSequence.CTOR] Num Super Blocks: %d\n", num_super_blocks ));
+    //TRACE(( "[RRRSequence.CTOR] Num Super Blocks: %d\n", num_super_blocks ));
     
     // Z = sym (arity)
     // Y = super block (num_super_blocks)
@@ -125,16 +124,16 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     size_type super_block_idx = global_block_idx / s_block_factor;
     size_type block_idx = global_block_idx % s_block_factor;
     
-    TRACE(("[RRRSequence.rank] Symbol Idx: %d\n", sym_idx));
-    TRACE(("[RRRSequence.rank] Block: %d\n", block_idx));
-    TRACE(("[RRRSequence.rank] Super Block: %d\n", super_block_idx));
+    //TRACE(("[RRRSequence.rank] Symbol Idx: %d\n", sym_idx));
+    //TRACE(("[RRRSequence.rank] Block: %d\n", block_idx));
+    //TRACE(("[RRRSequence.rank] Super Block: %d\n", super_block_idx));
     
     size_type count = 0;
     
     size_type inter_idx = 0;
     for (size_type i = 0; i < super_block_idx; i++)
     {
-        TRACE(("[RRRSequence.rank] i: %d\n", i));
+        //TRACE(("[RRRSequence.rank] i: %d\n", i));
         // last block for every super block previous to this one
         inter_idx = get3DIdx(s_block_factor, num_super_blocks,
             s_block_factor - 1, i, sym);
@@ -153,6 +152,6 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     count += cc.rank(classes[global_block_idx],
         offsets[global_block_idx], sym, sym_idx);
     
-    TRACE(("[RRRSequence.rank] Count: %d\n", count));
+    //TRACE(("[RRRSequence.rank] Count: %d\n", count));
     return count;
 }
