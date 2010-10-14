@@ -72,6 +72,8 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     
     // for our baseline this will be binary and stored in bitvectors...
     sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
+    TRACE(("[WaveletTree.CTOR] Mapped: "));
+    TRACE_SEQ((mapped_sequence));
     encoding[nodeIdx] = rrr.build(mapped_sequence);
     
     if (alphabet.length() <= ARITY)
@@ -84,8 +86,20 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
         wt_sequence_t childAlpha = filter_func(f, alphabet);
         
         size_type childIdx = getHeapChildIndex(nodeIdx, child + 1, ARITY);
+        
+        TRACE(("[WaveletTree.CTOR] Child (%d): ", childIdx));
+        TRACE_SEQ((childText));
+        TRACE(("[WaveletTree.CTOR] Child Alpha: "));
+        TRACE_SEQ((childAlpha));
+        
         encodeNodeRecursive(childText, childAlpha, childIdx);
     }
+}
+
+template <class T>
+size_type WaveletTree<T>::rank(T symbol, size_type index)
+{
+    return 0;
 }
 
 }
