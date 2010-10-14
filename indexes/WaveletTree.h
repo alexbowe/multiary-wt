@@ -63,6 +63,8 @@ WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
     encoding = encoding_heap_t(numNodes);
     
     encodeNodeRecursive(sequence, ALPHABET);
+    
+    rrr.seal();
 }
 
 template <class T>
@@ -105,9 +107,35 @@ inline size_type WaveletTree<T>::rank(T symbol, size_type index) const
 }
 
 template <class T>
-size_type WaveletTree<T>::rankRecursive(T symbol, size_type index, const wt_sequence_t & alphabet, size_type nodeIdx = 0) const
+size_type WaveletTree<T>::rankRecursive(T symbol, size_type index,
+    const wt_sequence_t & alphabet, size_type nodeIdx = 0) const
 {
+    size_type next_ind;
+    size_type child;
+    wt_sequence_t childAlpha;
+    
     return 0;
+    
+    // Don't need these encoders after this step
+    {
+        SymbolEncoder<T> enc(alphabet, ARITY);
+        child = enc(symbol);
+        SymbolFilter<T> f(enc, child);
+        
+        next_ind = rrr.rank(enc(symbol), index, encoding[nodeIdx]);
+        childAlpha = filter_func(f, alphabet);
+    }
+    
+    //if ( alphabet.length() <= ARITY )
+    //    return next_ind;
+    
+    size_type childIdx = getHeapChildIndex(nodeIdx, child + 1, ARITY);
+    TRACE(( "**[%s:%d] ChildIdx, Size: %d, %d\n", __FILE__, __LINE__,
+        childIdx, encoding.size())); 
+    if (childIdx >= encoding.size())
+        return next_ind;
+    
+    return rankRecursive(symbol, next_ind - 1, childAlpha, childIdx);
 }
 
 }
