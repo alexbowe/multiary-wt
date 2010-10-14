@@ -37,7 +37,7 @@ private:
 public:
     WaveletTree(const wt_sequence_t & sequence, size_type arity,
         size_type block_size, size_type s_block_factor);
-    size_type rank(T symbol, size_type index);
+    size_type rank(T symbol, size_type index) const;
 };
 
 template <class T>
@@ -97,8 +97,9 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
 }
 
 template <class T>
-size_type WaveletTree<T>::rank(T symbol, size_type index)
+size_type WaveletTree<T>::rank(T symbol, size_type index) const
 {
+    //rrr.rank(symbol, index, rrrseq);
     return 0;
 }
 
