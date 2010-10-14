@@ -44,7 +44,7 @@ namespace indexes
      * Returns the number of unique symbols (bits or otherwise) between
      * 0..arity-1 required to represent the specified number of elements.
      */
-    inline size_t getNumSymbolsRequired(size_type numElements,
+    inline size_type getNumSymbolsRequired(size_type numElements,
         size_type arity)
     {
         // log_arity ( numElements ) rounded up
@@ -55,12 +55,16 @@ namespace indexes
      * Gets number of tree nodes that would be in a balanced tree of this level
      * and arity
      */
-    inline size_t getNumBalancedTreeNodes(size_type levels, size_type arity)
+    inline size_type getNumBalancedTreeNodes(size_type levels, size_type arity)
     {
         // Could lose precision? can't call with unsigned ints unfortunately
         return (pow(static_cast<int>(arity),
             static_cast<double>(levels)) - 1)/(arity - 1);
     }
+    
+    inline size_type getHeapChildIndex(size_type position, size_type child,
+        size_type arity)
+    {   return arity * position + child;    }
 }
 
 #endif

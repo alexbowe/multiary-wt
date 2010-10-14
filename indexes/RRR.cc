@@ -12,6 +12,8 @@ using namespace indexes;
 // Pad blocks with 0 if they don't allign correctly
 const symbol_t RRR::PAD_VALUE = 0;
 
+RRRSequence::RRRSequence(): num_super_blocks(0) { }
+
 /** Constructs a RRR of specified arity, block size and super block factor. */
 RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
     ARITY(arity),
