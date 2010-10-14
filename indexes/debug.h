@@ -34,4 +34,28 @@
     #define TRACE(msg)
 #endif
 
+#if DEBUG
+    #include <iostream>
+    #include <string>
+    template <class T>
+    inline void trace_seq_impl(const basic_string<T> & seq, bool commas)
+    {
+        for (unsigned long i = 0; i< seq.length(); i++)
+        {
+            std::cerr << seq[i];
+            if (commas && i < seq.length() - 1) std::cerr << ", ";
+        }
+        std::cerr << std::endl;
+    }
+    // don't print commas for chars
+    inline void trace_seq_impl(const basic_string<char> & seq)
+    { trace_seq_impl(seq, false); }
+    inline void trace_seq_impl(const basic_string<int> & seq)
+    { trace_seq_impl(seq, true); }
+    
+    #define TRACE_SEQ(seq) trace_seq_impl seq
+#else
+    #define TRACE_SEQ(seq)
+#endif
+
 #endif /* end of include guard */
