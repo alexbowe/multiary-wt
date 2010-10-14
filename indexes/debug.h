@@ -35,23 +35,31 @@
 #endif
 
 #if DEBUG
-    #include <iostream>
+    #include <cstdio>
     #include <string>
     template <class T>
-    inline void trace_seq_impl(const basic_string<T> & seq, bool commas)
+    inline void trace_seq_impl(const std::basic_string<T> & seq, char* fmt)
     {
-        for (unsigned long i = 0; i< seq.length(); i++)
+        unsigned long length = seq.length();
+        for (unsigned long i = 0; i< length; i++)
         {
-            std::cerr << seq[i];
-            if (commas && i < seq.length() - 1) std::cerr << ", ";
+            fprintf(stderr, fmt, seq[i]);
+            if (strcmp(fmt, "%d") == 0 && i < length - 1)
+                fprintf(stderr, ", ");;
         }
-        std::cerr << std::endl;
+        fprintf(stderr, "\n");
     }
     // don't print commas for chars
     inline void trace_seq_impl(const basic_string<char> & seq)
-    { trace_seq_impl(seq, false); }
+    {
+        char fmt[] = {'%', 'c', '\0'};
+        trace_seq_impl(seq, fmt);
+    }
     inline void trace_seq_impl(const basic_string<int> & seq)
-    { trace_seq_impl(seq, true); }
+    {
+        char fmt[] = {'%', 'd', '\0'};
+        trace_seq_impl(seq, fmt);
+    }
     
     #define TRACE_SEQ(seq) trace_seq_impl seq
 #else
