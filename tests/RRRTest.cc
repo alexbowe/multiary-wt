@@ -30,9 +30,11 @@ TEST( RRR, popcount )
         {
             size_type result = rrr.rank(sym, pos, rrrseq);
             size_type expected = counts[sym][pos];
+            #if DEBUG
             if (result != expected)
                 TRACE(("***[RRRTest] rank(%d, %d) -> %d (expected: %d)\n",
                     sym, pos, result, expected));
+            #endif
             CHECK(result == expected);
         }
     }
@@ -65,9 +67,11 @@ TEST( RRR, popcount2 )
         {
             size_type result = rrr.rank(sym, pos, rrrseq);
             size_type expected = counts[sym][pos];
+            #if DEBUG
             if (result != expected)
                 TRACE(("***[RRRTest] rank(%d, %d) -> %d (expected: %d)\n",
                     sym, pos, result, expected));
+            #endif
             CHECK(result == expected);
         }
     }
