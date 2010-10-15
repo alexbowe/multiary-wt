@@ -34,5 +34,4 @@ env.AlwaysBuild(tests)
 env.Alias('test', tests)
 
 # Program
-#prog = env.Program("main", LIBS = ["Indexes"], source = ["main.cc"])
-prog = env.Program("main", source = ["main.cc"])
+prog = env.Program("main", LIBS = ["Indexes"], source = ["main.cc"])
