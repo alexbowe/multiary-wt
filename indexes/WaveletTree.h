@@ -51,14 +51,14 @@ WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
 {
     //TRACE(("[WaveletTree.CTOR] Input:    "));
     //TRACE_SEQ((sequence));
-    //TRACE(("[WaveletTree.CTOR] Alphabet: "));
-    //TRACE_SEQ((ALPHABET));
+    TRACE(("[WaveletTree.CTOR] Alphabet: "));
+    TRACE_SEQ((ALPHABET));
     
     // WT should always be balanced by definition
     size_type numLevels = getNumSymbolsRequired(ALPHABET.length(), ARITY);
     size_type numNodes = getNumBalancedTreeNodes(numLevels, ARITY);
-    //TRACE(("[WaveletTree.CTOR] numLevels: %d\n", numLevels));
-    //TRACE(("[WaveletTree.CTOR] numNodes: %d\n", numNodes));
+    TRACE(("[WaveletTree.CTOR] numLevels: %d\n", numLevels));
+    TRACE(("[WaveletTree.CTOR] numNodes: %d\n", numNodes));
     
     encoding = encoding_heap_t(numNodes);
     
@@ -73,10 +73,12 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
 {   
     myAssert(nodeIdx < encoding.size());
     
-    SymbolEncoder<T> enc(alphabet, ARITY);
+    sequence_t mapped_sequence;
     
+    SymbolEncoder<T> enc(alphabet, ARITY);
     // for our baseline this will be binary and stored in bitvectors...
-    sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
+    mapped_sequence = map_func<symbol_t>(enc, sequence);
+       
     //TRACE(("[WaveletTree.CTOR] Mapped: "));
     //TRACE_SEQ((mapped_sequence));
     encoding[nodeIdx] = rrr.build(mapped_sequence);
@@ -86,16 +88,16 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     
     for (size_type child = 0; child < ARITY; child++)
     {
-        SymbolFilter<T> f(enc, child);
-        wt_sequence_t childText = filter_func(f, sequence);
-        wt_sequence_t childAlpha = filter_func(f, alphabet);
+        wt_sequence_t childText;
+        wt_sequence_t childAlpha;
+        
+        {
+            SymbolFilter<T> f(enc, child);
+            childText = filter_func(f, sequence);
+            childAlpha = filter_func(f, alphabet);
+        }
         
         size_type childIdx = getHeapChildIndex(nodeIdx, child + 1, ARITY);
-        
-        //TRACE(("[WaveletTree.CTOR] Child (%d): ", childIdx));
-        //TRACE_SEQ((childText));
-        //TRACE(("[WaveletTree.CTOR] Child Alpha: "));
-        //TRACE_SEQ((childAlpha));
         
         encodeNodeRecursive(childText, childAlpha, childIdx);
     }
