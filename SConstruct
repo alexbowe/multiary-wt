@@ -3,7 +3,7 @@ import os
 # NOTE: uncomment -save-temps to examine ASM code...
 BASE_FLAGS = '-ansi -pedantic -Wall -Wextra' # + ' -save-temps'
 DEBUG_FLAGS = BASE_FLAGS + ' -g'
-RELEASE_FLAGS = BASE_FLAGS + ' -O3 -DNDEBUG'
+RELEASE_FLAGS = BASE_FLAGS + ' -DNDEBUG -O3'
 
 env = Environment(ENV=os.environ)
 Export('env')
@@ -34,5 +34,4 @@ env.AlwaysBuild(tests)
 env.Alias('test', tests)
 
 # Program
-#prog = env.Program("main", LIBS = ["Indexes"], source = ["main.cc"])
-prog = env.Program("main", source = ["main.cc"])
+prog = env.Program("main", LIBS = ["Indexes"], source = ["main.cc"])
