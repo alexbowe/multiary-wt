@@ -22,6 +22,7 @@ bool testCounts(const WaveletTree<T> & wt, map<T, CountVect> counters,
             size_type result = wt.rank(sym, j);
             size_type expected = counters[sym][j];
             if (result != expected)
+            {
                 if (isChar)
                 {
                     TRACE(("***[WTTest] rank('%c', %d) -> %d (expected: %d)\n",
@@ -32,6 +33,7 @@ bool testCounts(const WaveletTree<T> & wt, map<T, CountVect> counters,
                     TRACE(("***[WTTest] rank('%d', %d) -> %d (expected: %d)\n",
                         sym, j, result, expected));
                 }
+            }
             if (result != expected)
                 return false;
         }
