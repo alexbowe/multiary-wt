@@ -37,6 +37,7 @@
 #if DEBUG
     #include <cstdio>
     #include <string>
+    #include <cstring>
     template <class T>
     inline void trace_seq_impl(const std::basic_string<T> & seq, char* fmt)
     {
