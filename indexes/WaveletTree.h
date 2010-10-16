@@ -51,14 +51,14 @@ WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
 {
     //TRACE(("[WaveletTree.CTOR] Input:    "));
     //TRACE_SEQ((sequence));
-    TRACE(("[WaveletTree.CTOR] Alphabet: "));
-    TRACE_SEQ((ALPHABET));
+    //TRACE(("[WaveletTree.CTOR] Alphabet: "));
+    //TRACE_SEQ((ALPHABET));
     
     // WT should always be balanced by definition
     size_type numLevels = getNumSymbolsRequired(ALPHABET.length(), ARITY);
     size_type numNodes = getNumBalancedTreeNodes(numLevels, ARITY);
-    TRACE(("[WaveletTree.CTOR] numLevels: %d\n", numLevels));
-    TRACE(("[WaveletTree.CTOR] numNodes: %d\n", numNodes));
+    //TRACE(("[WaveletTree.CTOR] numLevels: %d\n", numLevels));
+    //TRACE(("[WaveletTree.CTOR] numNodes: %d\n", numNodes));
     
     encoding = encoding_heap_t(numNodes);
     
