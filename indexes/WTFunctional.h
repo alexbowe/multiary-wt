@@ -9,6 +9,42 @@ using namespace std;
 namespace indexes
 {    
 
+template <class T>
+inline size_type encode(T symbol, const basic_string<T> & alpha, size_type left,
+    size_type right, size_type arity)
+{
+    //size_type low = 1;
+    //size_type high = arity - 1;
+    size_type sigma = right - left + 1;
+    size_type step = (sigma + 1) / arity;
+    
+    // if alphabet is smaller than arity
+    if (sigma <= arity)
+    {
+        for (size_type i = 0; i < arity; i++)
+        {
+            if (alpha[i] == symbol)
+                return i;
+        }
+        // should only get here if we are encoding symbols that aren't in
+        // the alphabet
+        myAssert(false);
+    }
+    
+    // this could be done with binary search for i
+    // making this O(log(arity)), currently it is O(arity)
+    // arity wont get very big though... so leave it as linear for now
+    // was previously O(log(sigma))
+    for (size_type i = 1; i < arity; i++)
+    {
+        if (symbol < alpha[i * step])
+            return i - 1;
+    }
+    
+    // last segment
+    return arity - 1;
+}
+
 /** Function object used for encoding symbols */
 template <class T>
 class SymbolEncoder
@@ -32,12 +68,12 @@ SymbolEncoder<T>::SymbolEncoder(const enc_sequence_t & alphabet,
 template <class T>
 symbol_t SymbolEncoder<T>::operator()(T input) const
 {
-    enc_sequence_iterator result = lower_bound(ALPHABET.begin(),
-        ALPHABET.end(), input);
-    size_type index = result - ALPHABET.begin();
-    myAssert(ALPHABET[index] == input);
+    //enc_sequence_iterator result = lower_bound(ALPHABET.begin(),
+    //    ALPHABET.end(), input);
+    //size_type index = result - ALPHABET.begin();
+    //myAssert(ALPHABET[index] == input);
     
-    return (index * ARITY) / SIGMA;
+    return encode(input, ALPHABET, 0, ALPHABET.size() - 1, ARITY);
 }
 
 /** Filters symbols based on expected encoding value */

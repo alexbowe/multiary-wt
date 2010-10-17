@@ -64,7 +64,11 @@ namespace indexes
     
     inline size_type getHeapChildIndex(size_type position, size_type child,
         size_type arity)
-    {   return arity * position + child;    }
+    {
+        return arity * position + child;
+    }
+    
+    
 }
 
 #endif
