@@ -32,7 +32,6 @@ private:
     encoding_heap_t encoding;
     
     void encodeNodeRecursive(const wt_sequence_t & sequence,
-        const wt_sequence_t & alphabet,
         size_type left, size_type right, size_type nodeIdx);
     
     size_type rankRecursive(T symbol, size_type index,
@@ -70,42 +69,27 @@ WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
     TRACE(("[WaveletTree.CTOR] numNodes:  %d\n", numNodes));
     TRACE(("[WaveletTree.CTOR] Encoding Recursively...\n\n"));
     
-    encodeNodeRecursive(sequence, ALPHABET, 0, ALPHABET.size() - 1);
+    encodeNodeRecursive(sequence, 0, ALPHABET.size() - 1);
     
     rrr.seal();
 }
 
 template <class T>
 void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
-    const wt_sequence_t & alphabet,
     size_type left, size_type right, size_type nodeIdx = 0)
 {
     SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
     // for our baseline this will be binary and stored in bitvectors...
     sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
     
-    /* 
-    TRACE(("[WaveletTree.encodeNodeRecursive] Node:  %d/%d\n", nodeIdx, 
-        encoding.size() - 1));
-    TRACE(("[WaveletTree.encodeNodeRecursive] Input: "));
-    TRACE_SEQ((sequence));
-    TRACE(("[WaveletTree.encodeNodeRecursive] Alpha: "));
-    TRACE_SEQ((alphabet));
-    TRACE(("[WaveletTree.encodeNodeRecursive]        "));
-    TRACE_SEQ((map_func<symbol_t>(enc, alphabet)));
-    TRACE(("[WaveletTree.encodeNodeRecursive] Sigma: %d\n", alphabet.size()));
-    TRACE(("[WaveletTree.encodeNodeRecursive] Mapped: "));
-    TRACE_SEQ((mapped_sequence));
-    TRACE(("\n"));
-    */
-    
     myAssert(nodeIdx < encoding.size());
     
     encoding[nodeIdx] = rrr.build(mapped_sequence);
+    
     // If we have an alphabet of sigma = arity, we won't gain any more
     // information by encoding sub-levels... it is represented in the same
     // amount of symbols here
-    if (alphabet.length() <= ARITY)
+    if (getSigma(left, right) <= ARITY)
         return;
     
     size_type step = getEncodingStep(getSigma(left, right), ARITY);
@@ -115,8 +99,7 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     for (size_type child = 0; child < ARITY; child++)
     {
         wt_sequence_t childText;
-        wt_sequence_t childAlpha;
-        wt_sequence_t childAlphaTest;
+        
         // last child
         if (child == ARITY - 1)
             childRight = right;
@@ -124,15 +107,13 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
         {
             SymbolFilter<T> f(enc, child);
             childText = filter_func(f, sequence);
-            childAlpha = filter_func(f, alphabet);
-            childAlphaTest = ALPHABET.substr(childLeft,
-                getSigma(childLeft, childRight));
         }
         
         size_type childIdx = getHeapChildIndex(nodeIdx, child + 1, ARITY);
         
-        encodeNodeRecursive(childText, childAlphaTest, childLeft, childRight,
+        encodeNodeRecursive(childText, childLeft, childRight,
             childIdx);
+        
         childLeft += step;
         childRight += step;
     }
@@ -141,7 +122,6 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
 template <class T>
 inline size_type WaveletTree<T>::rank(T symbol, size_type index) const
 {
-    TRACE(("rank(%d, %d)\n", symbol, index));
     // could check that symbol is in alphabet too at runtime...
     return rankRecursive(symbol, index, ALPHABET, 0, ALPHABET.size() - 1);
 }
