@@ -14,4 +14,3 @@ runtests
 
 ## Stuff I don't want to add just yet ##
 deps/*
-main.cc
