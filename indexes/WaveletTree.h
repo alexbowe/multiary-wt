@@ -80,7 +80,7 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     const wt_sequence_t & alphabet,
     size_type left, size_type right, size_type nodeIdx = 0)
 {
-    SymbolEncoder<T> enc(alphabet, ARITY);
+    SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
     // for our baseline this will be binary and stored in bitvectors...
     sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
     
@@ -171,7 +171,7 @@ size_type WaveletTree<T>::rankRecursive(T symbol, size_type pos,
     
     // Don't need these functors after this step, so create them in a block
     {
-        SymbolEncoder<T> enc(alphabet, ARITY);
+        SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
         child = enc(symbol);
         SymbolFilter<T> f(enc, child);
         

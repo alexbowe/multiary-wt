@@ -36,13 +36,16 @@ inline size_type encode(T symbol, const basic_string<T> & alpha, size_type left,
     {
         // TODO: This could be done with a binary search too... but arity is
         // usually small...
-        for (size_type i = left; i < arity; i++)
+        for (size_type i = 0; i < sigma; i++)
         {
-            if (alpha[i] == symbol)
+            if (alpha[left + i] == symbol)
                 return i;
         }
         // should only get here if we are encoding symbols that aren't in
         // the alphabet
+        TRACE(("SYMBOL: %c\n", symbol));
+        TRACE(("RANGE: [%d, %d]\n", left, right));
+        TRACE(("SIGMA: %d\n", sigma));
         myAssert(false);
     }
     
