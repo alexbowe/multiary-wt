@@ -7,6 +7,7 @@
 
 using namespace std;
 
+/*
 TEST( WaveletTree, charRank )
 {
     basic_string<char> input = "this isnt fun";
@@ -32,7 +33,7 @@ TEST( WaveletTree, intRank )
         for (int blocksize = 5; blocksize <= 15; blocksize+= 5)
             for (int sb_fact = 1; sb_fact <= 5; sb_fact+=2)
                 CHECK(doCountTest(input, counters, arity, blocksize, sb_fact));
-}
+}*/
 
 TEST( WaveletTree, charRankHardcore )
 {
@@ -46,8 +47,10 @@ TEST( WaveletTree, charRankHardcore )
     map<char, CountVect> counters = prepareCountMap(input, alphabet);
     
     
-    for (int arity = 2; arity <= 8; arity*=2)
+    /*for (int arity = 2; arity <= 8; arity*=2)
         for (int blocksize = 5; blocksize <= 10; blocksize+= 5)
             for (int sb_fact = 1; sb_fact <= 5; sb_fact+=2)
                 CHECK(doCountTest(input, counters, arity, blocksize, sb_fact));
+                */
+    CHECK(doCountTest(input, counters, 4, 5, 3));
 }
