@@ -57,17 +57,6 @@ WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
     
     encoding = encoding_heap_t(numNodes);
     
-    // Trace some stuff
-    TRACE(("[WaveletTree.CTOR] Input: "));
-    TRACE_SEQ((sequence));
-    TRACE(("[WaveletTree.CTOR] Alphabet:  "));
-    TRACE_SEQ((ALPHABET));
-    TRACE(("[WaveletTree.CTOR] Sigma:     %d\n", ALPHABET.size()));
-    TRACE(("[WaveletTree.CTOR] Arity:     %d\n", ARITY));
-    TRACE(("[WaveletTree.CTOR] numLevels: %d\n", numLevels));
-    TRACE(("[WaveletTree.CTOR] numNodes:  %d\n", numNodes));
-    TRACE(("[WaveletTree.CTOR] Encoding Recursively...\n\n"));
-    
     encodeNodeRecursive(sequence, 0, ALPHABET.size() - 1);
     
     rrr.seal();
