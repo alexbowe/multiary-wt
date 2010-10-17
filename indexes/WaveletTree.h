@@ -39,7 +39,13 @@ private:
 public:
     WaveletTree(const wt_sequence_t & sequence, size_type arity,
         size_type block_size, size_type s_block_factor);
-    size_type rank(T symbol, size_type index) const;
+    inline size_type rank(T symbol, size_type index) const
+    {
+        // could check that symbol is in alphabet too at runtime...
+        return rankRecursive(symbol, index, 0, ALPHABET.size() - 1);
+    }
+    inline const basic_string<T> & getAlpha()
+    { return ALPHABET; }
 };
 
 template <class T>
@@ -105,13 +111,6 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
         childLeft += step;
         childRight += step;
     }
-}
-
-template <class T>
-inline size_type WaveletTree<T>::rank(T symbol, size_type index) const
-{
-    // could check that symbol is in alphabet too at runtime...
-    return rankRecursive(symbol, index, 0, ALPHABET.size() - 1);
 }
 
 template <class T>
