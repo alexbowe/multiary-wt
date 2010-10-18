@@ -1,7 +1,7 @@
 Multiary Wavelet Tree and RRR in C++
 ====================================
 
-v0.1
+v0.1.5
 
 Author: Alex Bowe
 
