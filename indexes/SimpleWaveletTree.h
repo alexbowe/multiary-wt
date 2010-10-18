@@ -77,7 +77,7 @@ dynamic_bitset<> makeSimpleNode(const basic_string<T> & seq, size_type arity)
         for (size_type sym = 0; sym < arity; sym++)
         {
             size_type index = sym * length + pos;
-            node[index] = (seq[pos] == sym);
+            node[index] = ((unsigned int)seq[pos] == sym);
         }
     }
     return node;
@@ -93,7 +93,7 @@ inline size_type simpleRank(size_type sym, size_type pos, const dynamic_bitset<>
     size_type pos_1 = sym * length + pos;
     for ( size_type i = pos_0; i <= pos_1; i++)
     {
-        rank += node[i];
+        rank += (unsigned int)node[i];
     }
     return rank;
 }
