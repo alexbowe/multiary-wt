@@ -37,6 +37,7 @@
 #if DEBUG
     #include <cstdio>
     #include <string>
+    #include <cstring>
     template <class T>
     inline void trace_seq_impl(const std::basic_string<T> & seq, char* fmt)
     {
@@ -44,8 +45,8 @@
         for (unsigned long i = 0; i< length; i++)
         {
             fprintf(stderr, fmt, seq[i]);
-            if (strcmp(fmt, "%d") == 0 && i < length - 1)
-                fprintf(stderr, ", ");;
+            //if (strcmp(fmt, "%d") == 0 && i < length - 1)
+            //    fprintf(stderr, ", ");;
         }
         fprintf(stderr, "\n");
     }

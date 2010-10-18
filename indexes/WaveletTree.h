@@ -32,14 +32,20 @@ private:
     encoding_heap_t encoding;
     
     void encodeNodeRecursive(const wt_sequence_t & sequence,
-        const wt_sequence_t & alphabet, size_type nodeIdx);
+        size_type left, size_type right, size_type nodeIdx);
     
     size_type rankRecursive(T symbol, size_type index,
-        const wt_sequence_t & alphabet, size_type nodeIdx) const;
+        size_type left, size_type right, size_type nodeIdx) const;
 public:
     WaveletTree(const wt_sequence_t & sequence, size_type arity,
         size_type block_size, size_type s_block_factor);
-    size_type rank(T symbol, size_type index) const;
+    inline size_type rank(T symbol, size_type index) const
+    {
+        // could check that symbol is in alphabet too at runtime...
+        return rankRecursive(symbol, index, 0, ALPHABET.size() - 1);
+    }
+    inline const basic_string<T> & getAlpha()
+    { return ALPHABET; }
 };
 
 template <class T>
@@ -49,104 +55,102 @@ WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
     rrr(arity, block_size, s_block_factor),
     ALPHABET(getAlphabet(sequence))
 {
-    //TRACE(("[WaveletTree.CTOR] Input:    "));
-    //TRACE_SEQ((sequence));
-    //TRACE(("[WaveletTree.CTOR] Alphabet: "));
-    //TRACE_SEQ((ALPHABET));
-    
+    myAssert(ARITY >= 2);
+
     // WT should always be balanced by definition
     size_type numLevels = getNumSymbolsRequired(ALPHABET.length(), ARITY);
     size_type numNodes = getNumBalancedTreeNodes(numLevels, ARITY);
-    //TRACE(("[WaveletTree.CTOR] numLevels: %d\n", numLevels));
-    //TRACE(("[WaveletTree.CTOR] numNodes: %d\n", numNodes));
     
     encoding = encoding_heap_t(numNodes);
     
-    encodeNodeRecursive(sequence, ALPHABET);
+    encodeNodeRecursive(sequence, 0, ALPHABET.size() - 1);
     
     rrr.seal();
 }
 
 template <class T>
 void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
-    const wt_sequence_t & alphabet, size_type nodeIdx = 0)
-{   
-    myAssert(nodeIdx < encoding.size());
-    
-    SymbolEncoder<T> enc(alphabet, ARITY);
-    
+    size_type left, size_type right, size_type nodeIdx = 0)
+{
+    SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
     // for our baseline this will be binary and stored in bitvectors...
     sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
-    //TRACE(("[WaveletTree.CTOR] Mapped: "));
-    //TRACE_SEQ((mapped_sequence));
+    
+    myAssert(nodeIdx < encoding.size());
+    
     encoding[nodeIdx] = rrr.build(mapped_sequence);
     
-    if (alphabet.length() <= ARITY)
+    // If we have an alphabet of sigma = arity, we won't gain any more
+    // information by encoding sub-levels... it is represented in the same
+    // amount of symbols here
+    if (getSigma(left, right) <= ARITY)
         return;
+    
+    size_type step = getEncodingStep(getSigma(left, right), ARITY);
+    size_type childLeft = left;
+    size_type childRight = childLeft + step - 1;
     
     for (size_type child = 0; child < ARITY; child++)
     {
-        SymbolFilter<T> f(enc, child);
-        wt_sequence_t childText = filter_func(f, sequence);
-        wt_sequence_t childAlpha = filter_func(f, alphabet);
+        wt_sequence_t childText;
+        
+        // last child
+        if (child == ARITY - 1)
+            childRight = right;
+        
+        {
+            SymbolFilter<T> f(enc, child);
+            childText = filter_func(f, sequence);
+        }
         
         size_type childIdx = getHeapChildIndex(nodeIdx, child + 1, ARITY);
         
-        //TRACE(("[WaveletTree.CTOR] Child (%d): ", childIdx));
-        //TRACE_SEQ((childText));
-        //TRACE(("[WaveletTree.CTOR] Child Alpha: "));
-        //TRACE_SEQ((childAlpha));
+        encodeNodeRecursive(childText, childLeft, childRight,
+            childIdx);
         
-        encodeNodeRecursive(childText, childAlpha, childIdx);
+        childLeft += step;
+        childRight += step;
     }
-}
-
-template <class T>
-inline size_type WaveletTree<T>::rank(T symbol, size_type index) const
-{
-    // could check that symbol is in alphabet too at runtime...
-    return rankRecursive(symbol, index, ALPHABET);
 }
 
 template <class T>
 size_type WaveletTree<T>::rankRecursive(T symbol, size_type pos,
-    const wt_sequence_t & alphabet, size_type nodeIdx = 0) const
+    size_type left, size_type right, size_type nodeIdx = 0) const
 {
-    size_type next_ind;
-    size_type child;
-    wt_sequence_t childAlpha;
-    
-    //TRACE(("ENTER\n"));
-    //TRACE(("POS: %d\n", pos));
     myAssert(nodeIdx < encoding.size());
     
-    //TRACE(("\n"));
-    //TRACE(("[WaveletTree.rank] Symbol, Pos: '%d', %d\n", symbol, pos));
-    //TRACE(("[WaveletTree.rank] Alpha: "));
-    //TRACE_SEQ((alphabet));
-    
-    // Don't need these functors after this step, so create them in a block
+    size_type child;
+    // Don't need this functor after this step, so create in a block
     {
-        SymbolEncoder<T> enc(alphabet, ARITY);
+        SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
         child = enc(symbol);
-        SymbolFilter<T> f(enc, child);
-        
-        //TRACE(("enc() -> %d\n", enc(symbol)));
-        next_ind = rrr.rank(enc(symbol), pos, encoding[nodeIdx]);
-        //TRACE(("next_ind = %d\n", next_ind));
-        if (next_ind == 0)
-            return 0;
-        
-        childAlpha = filter_func(f, alphabet);
     }
     
+    // Query RRR
+    size_type next_ind = rrr.rank(child, pos, encoding[nodeIdx]);
+        
+    // If there were none at all of this encoding...
+    if (next_ind == 0)
+    {
+        return 0;
+    }
+            
     // Leaf node?
-    if ( alphabet.length() <= ARITY )
+    if ( getSigma(left, right) <= ARITY )
+    {
         return next_ind;
+    }
     
+    // Find next child index
     size_type childIdx = getHeapChildIndex(nodeIdx, child + 1, ARITY);
     
-    return rankRecursive(symbol, next_ind - 1, childAlpha, childIdx);
+    // Find new alphabet range
+    size_type step = getEncodingStep(getSigma(left, right), ARITY);
+    size_type childLeft = left + child * step;
+    size_type childRight = (child == ARITY - 1)? right: childLeft + step - 1;
+    
+    return rankRecursive(symbol, next_ind - 1, 
+        childLeft, childRight, childIdx);
 }
 
 }

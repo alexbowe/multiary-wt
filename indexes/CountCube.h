@@ -34,7 +34,7 @@ private:
     
 public:
     CountCube(size_type arity, size_type blocksize);
-    bool add(const sequence_t & block, size_type & classNum,
+    void add(const sequence_t & block, size_type & classNum,
         size_type & offset);
     inline void seal() // delete mappers
     {
