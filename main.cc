@@ -3,10 +3,22 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+
 #include "indexes/WaveletTree.h"
 #include "tclap/CmdLine.h"
 #include "indexes/debug.h"
 #include "nanotime_wrapper/nanotime_wrapper.h"
+
+//#define LIBCDS
+
+#ifdef LIBCDS
+#include "WaveletTree.h"
+#include "Sequence.h"
+#include "Mapper.h"
+#include "BitSequenceBuilder.h"
+#define DEFAULT_SAMPLING 32
+namespace cds = cds_static;
+#endif
 
 using namespace std;
 using namespace indexes;
@@ -49,7 +61,7 @@ QueryGenerator<T>::QueryGenerator(size_t text_length,
 static const size_t DEFAULT_QUERIES = 1e3;
 static const size_t DEFAULT_ARITY = 2;
 static const size_t DEFAULT_BLOCKSIZE = 15;
-static const size_t DEFAULT_SBSIZE = 6;
+static const size_t DEFAULT_SBSIZE = 32;
 
 typedef struct p
 {
@@ -152,6 +164,13 @@ typedef struct stats
     size_t wt_size;
 } stats_t;
 
+inline unsigned int * unsignedCast(int * p)
+{ return (unsigned int*) p; }
+
+inline unsigned char * unsignedCast(char * p)
+{ return (unsigned char*) p; }
+
+
 template <class T>
 stats_t doStuff(params_t & params)
 {
@@ -159,16 +178,39 @@ stats_t doStuff(params_t & params)
     
     // Clear input buffer after creating WT
     basic_string<T> input = readFile<T>(params.filename.c_str());
+    
+    #ifdef LIBCDS // libcds doesnt provide alphabet accessor
+    basic_string<T> alpha = getAlphabet(input);
+    #endif
+    
     result.text_length = input.length();
     
     cerr << "Building Wavelet Tree..." << endl;
-    WaveletTree<T> wt(input, params.arity, params.blocksize, params.sbsize);
+    
+    #ifdef LIBCDS
+        T * input_ptr = const_cast<T*>(input.c_str());
+        // Adapted from Claude's example: http://libcds.recoded.cl/node/9
+        cds::MapperNone * map = new cds::MapperNone();
+        cds::wt_coder_binary * wc = new
+            cds::wt_coder_binary(unsignedCast(input_ptr),
+            result.text_length, map);
+        // Default sampling taken from RRR code...
+        cds::BitSequenceBuilder * bsb = new
+            cds::BitSequenceBuilderRRR(DEFAULT_SAMPLING);
+        cds::Sequence * wt = new cds::WaveletTree(unsignedCast(input_ptr),
+            result.text_length, wc, bsb, map);
+    #else
+        WaveletTree<T> wt(input, params.arity,
+            params.blocksize, params.sbsize);
+        basic_string<T> alpha = wt.getAlpha();
+    #endif
+    
     cerr << "Done!" << endl;
     
-    result.sigma = wt.getAlpha().length();
+    result.sigma = alpha.length();
     
     cerr << "Generating " << params.queries << " Queries..." << endl;
-    QueryGenerator<T> qgen(input.length(), wt.getAlpha());
+    QueryGenerator<T> qgen(result.text_length, alpha);
     
     vector< Query<T> > queries(params.queries);
     for (unsigned int i = 0; i < params.queries; i++)
@@ -179,11 +221,22 @@ stats_t doStuff(params_t & params)
     cerr << "Running Queries..." << endl;
     nanotime_t t0 = get_nanotime();
     for (unsigned int i = 0; i < params.queries; i++)
+    {
+        #ifdef LIBCDS
+        wt->rank(queries[i].symbol, queries[i].position);
+        #else
         wt.rank(queries[i].symbol, queries[i].position);
+        #endif
+    }
+        
     nanotime_t t1 = get_nanotime();
     cerr << "Done!" << endl;
     
     result.time = (t1 - t0);
+    
+    #ifdef LIBCDS
+    delete wc;
+    #endif
     
     return result;
 }
@@ -213,26 +266,3 @@ int main(int argc, char **argv)
     
     return 0;
 }
-
-/*
-
-
-
-//basic_string<char> alpha = wt.getAlpha();
-//cerr << "ALPHABET: " << alpha << endl;
-
-QueryGenerator<char> qgen(input.length(), wt.getAlpha());
-
-flushis(cin);
-
-int numQueries = 1e3; // a thousand queries
-typedef struct query_struct<char> query;
-vector<query> queries = vector<query>(numQueries);
-for (int i = 0; i < numQueries; i++)
-    queries[i] = qgen.next();
-
-cerr << "querying..." << endl;
-for (int i = 0; i < numQueries; i++)
-    wt.rank(queries[i].symbol, queries[i].position);
-cerr << "done" << endl;
-*/

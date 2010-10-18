@@ -28,7 +28,7 @@ void CountCube::add(const sequence_t & block, size_type & classNum,
     if ( classNum >= blockMappers.size())
     {
         //TRACE(("New Block Mapper\n"));
-        blockMappers.push_back(shared_ptr<Mapper>(new Mapper()));
+        blockMappers.push_back(boost::shared_ptr<Mapper>(new Mapper()));
     }
 
     offset = (*blockMappers[classNum])(block);
