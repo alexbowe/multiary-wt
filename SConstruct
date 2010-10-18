@@ -17,10 +17,11 @@ if int(debug_level) > 0:
 env.Append(CCFLAGS = flags.split())
 
 # Other flags
-env.Append(LIBPATH=[ "./", ])
+env.Append(LIBPATH=[ "./", "deps/libcds-v1.0.2/lib" ])
 env.Append(CPPPATH=[ "./", "deps",
                      "deps/boost_1_43_0",
-                     "deps/tclap-1.2.0/include"])
+                     "deps/tclap-1.2.0/include",
+                     "deps/libcds-v1.0.2"])
 
 # Libs
 env.StaticLibrary(target = "Indexes", source = env.Glob("indexes/*.cc"))
@@ -37,4 +38,5 @@ env.AlwaysBuild(tests)
 env.Alias('test', tests)
 
 # Program
-prog = env.Program("main", LIBS = ["Indexes", "Nanotime"], source = ["main.cc"])
+prog = env.Program("main", LIBS = ["Indexes", "Nanotime", "libcds"],
+                    source = ["main.cc"])

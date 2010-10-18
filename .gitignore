@@ -13,4 +13,4 @@ main
 runtests
 
 ## Stuff I don't want to add just yet ##
-deps/boost*
+deps/boost_1_43_0
