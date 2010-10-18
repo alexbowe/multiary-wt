@@ -1,0 +1,16 @@
+## OS Files ##
+.DS_Store
+
+## SCons ##
+.sconsign.dblite
+
+data/*
+
+## Compiled stuff ##
+*.a
+*.o
+main
+runtests
+
+## Stuff I don't want to add just yet ##
+deps/boost*
