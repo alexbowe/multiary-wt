@@ -5,6 +5,8 @@
 #include <ctime>
 #include "indexes/WaveletTree.h"
 #include "tclap/CmdLine.h"
+#include "indexes/debug.h"
+#include "nanotime_wrapper/nanotime_wrapper.h"
 
 using namespace std;
 using namespace indexes;
@@ -142,7 +144,9 @@ basic_string<T> readFile(const char * filename)
 
 typedef struct stats
 {
-    size_t time;
+    nanotime_t time;
+    size_t text_length;
+    size_t sigma;
     size_t table_size;
     size_t seq_size;
     size_t wt_size;
@@ -155,10 +159,13 @@ stats_t doStuff(params_t & params)
     
     // Clear input buffer after creating WT
     basic_string<T> input = readFile<T>(params.filename.c_str());
+    result.text_length = input.length();
     
     cerr << "Building Wavelet Tree..." << endl;
     WaveletTree<T> wt(input, params.arity, params.blocksize, params.sbsize);
     cerr << "Done!" << endl;
+    
+    result.sigma = wt.getAlpha().length();
     
     cerr << "Generating " << params.queries << " Queries..." << endl;
     QueryGenerator<T> qgen(input.length(), wt.getAlpha());
@@ -167,11 +174,16 @@ stats_t doStuff(params_t & params)
     for (unsigned int i = 0; i < params.queries; i++)
         queries[i] = qgen.next();
     cerr << "Done!" << endl;
-        
+    
+    
     cerr << "Running Queries..." << endl;
+    nanotime_t t0 = get_nanotime();
     for (unsigned int i = 0; i < params.queries; i++)
         wt.rank(queries[i].symbol, queries[i].position);
+    nanotime_t t1 = get_nanotime();
     cerr << "Done!" << endl;
+    
+    result.time = (t1 - t0);
     
     return result;
 }
@@ -192,10 +204,12 @@ int main(int argc, char **argv)
     else
         result = doStuff<char>(params);
     
-    cout << "Query Time (ns):  " << endl;
-    cout << "Seq Size (bytes): " << endl;
-    cout << "RRR Size (bytes): " << endl;
-    cout << "WT Size (bytes):  " << endl;
+    cout << "Sigma            : " << result.sigma << endl;
+    cout << "Mean Time   (ms) : " << ((float)result.time/params.queries)/1e6
+         << endl;
+    cout << "Seq Size (bytes) : " << endl;
+    cout << "RRR Size (bytes) : " << endl;
+    cout << "WT Size  (bytes) : " << endl;
     
     return 0;
 }
