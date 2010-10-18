@@ -8,6 +8,8 @@
 
 #include "indexes/WaveletTree.h"
 
+#include "tclap/CmdLine.h"
+
 using namespace std;
 using namespace indexes;
 
