@@ -5,6 +5,7 @@
 
 #include "boost/shared_array.hpp"
 #include "common.h"
+#include "utility.h"
 #include "CountCube.h"
 
 using namespace std;
@@ -16,25 +17,24 @@ class RRRSequence
 {
 private:
     friend class RRR;
-    //shared_array i manipulate myself (using the stuff in basics.h)
-    // orrrr dynamic_bitset
-    vector<int> classes;
+    boost::shared_array<uint> classes;
     // prefix sum (on bits) for offsets
-    //boost::shared_array<int> prefix_sum;
+    // boost::shared_array<int> prefix_sum;
     vector<int> offsets;
-    // shared ptr of 2D array: intermediate counts per block (but do some
-    // math to get superblock limit ones...)
     typedef boost::shared_array<int> inter_t;
     inter_t intermediates;
     
     size_type num_super_blocks;
     
-    RRRSequence(const vector<int> & classes_in, const vector<int> & offsets_in,
+    RRRSequence(const boost::shared_array<uint> & classes_in,
+        const vector<int> & offsets_in,
         const size_type arity, const size_type blocksize,
-        const size_type s_block_factor, const CountCube & cc);
+        const size_type s_block_factor,
+        const size_type BITS_PER_CLASS, const CountCube & cc);
         
     size_type rank(symbol_t sym, size_type pos, size_type blocksize,
-        const size_type s_block_factor, const CountCube & cc) const;
+        size_type s_block_factor, size_type NUM_BITS_PER_CLASS,
+        const CountCube & cc) const;
 public:
     // empty constructor for us to hold in our outer vector
     RRRSequence();
@@ -50,6 +50,7 @@ private:
     const size_type ARITY;
     const size_type BLOCK_SIZE;
     const size_type SUPER_BLOCK_FACTOR;
+    const size_type BITS_PER_CLASS;
     
     CountCube countCube;
 public:
@@ -60,7 +61,7 @@ public:
         const RRRSequence & seq) const
     {
         return seq.rank(symbol, position, BLOCK_SIZE, SUPER_BLOCK_FACTOR,
-            countCube);
+            BITS_PER_CLASS, countCube);
     }
     inline void seal() { countCube.seal(); }
 };

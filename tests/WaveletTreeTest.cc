@@ -7,11 +7,9 @@
 
 using namespace std;
 
-// TESTS BEGIN BEBE
-
 TEST( WaveletTree, charRank )
 {
-    basic_string<char> input = "this is a test string!";
+    basic_string<char> input = "this isnt fun";
     
     basic_string<char> alphabet = getAlphabet(input);
     map<char, CountVect> counters = prepareCountMap(input, alphabet);
@@ -46,6 +44,7 @@ TEST( WaveletTree, charRankHardcore )
         
     basic_string<char> alphabet = getAlphabet(input);
     map<char, CountVect> counters = prepareCountMap(input, alphabet);
+    
     
     for (int arity = 2; arity <= 8; arity*=2)
         for (int blocksize = 5; blocksize <= 10; blocksize+= 5)

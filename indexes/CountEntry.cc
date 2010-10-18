@@ -1,33 +1,43 @@
 #include "CountEntry.h"
 #include <cstring>
+#include "utility.h"
+#include "debug.h"
 
 using namespace std;
 using namespace indexes;
 
 CountEntry::CountEntry(const sequence_t & block, size_type arity)
 {
-    const size_type blocksize(block.size());
+    const size_type BLOCKSIZE(block.size());
+    const size_type FIELDSIZE(getBitsRequired(BLOCKSIZE));
+    const size_type NUM_INTS(getUintsRequired(arity * BLOCKSIZE, FIELDSIZE));
     
-    counts = boost::shared_array<size_type>(new size_type[arity * blocksize]);
-    
-    for (size_type i = 0; i < blocksize * arity; i++)
-        counts[i] = 0;
+    counts = boost::shared_array<uint>((uint*) calloc(NUM_INTS, sizeof(uint)) );
     
     // cumulative sum for each symbol
-    size_type count_index = 0;
-    for ( size_type pos = 0; pos < blocksize; pos++ )
+    uint count_index = 0;
+    // for each position
+    for ( size_type pos = 0; pos < BLOCKSIZE; pos++ )
     {
         symbol_t block_symbol = block[pos];
         
+        // for each symbol
         for ( symbol_t sym = 0; sym < static_cast<symbol_t>(arity); sym++)
         {
-            count_index = sym * blocksize + pos;
+            // this is the index in the 1D version of the array
+            count_index = sym * BLOCKSIZE + pos;
             if (pos > 0)
-                // move across
-                counts[count_index] = counts[count_index - 1];
+            {
+                // Carry count across
+                uint prev = get_field(counts.get(), FIELDSIZE, count_index - 1);
+                set_field(counts.get(), FIELDSIZE, count_index, prev);
+            }
             // update relevant symbol count
             if (block_symbol == sym)
-                counts[count_index]++;
+            {
+                uint temp = get_field(counts.get(), FIELDSIZE, count_index);
+                set_field(counts.get(), FIELDSIZE, count_index, temp + 1);
+            }
         }
     }
 }
