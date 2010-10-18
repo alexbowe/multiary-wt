@@ -18,10 +18,13 @@ env.Append(CCFLAGS = flags.split())
 
 # Other flags
 env.Append(LIBPATH=[ "./", ])
-env.Append(CPPPATH=[ "./", "deps", "deps/boost_1_43_0" ])
+env.Append(CPPPATH=[ "./", "deps",
+                     "deps/boost_1_43_0",
+                     "deps/tclap-1.2.0/include"])
 
 # Libs
 env.StaticLibrary(target = "Indexes", source = env.Glob("indexes/*.cc"))
+env.StaticLibrary(target = "Nanotime", source = env.Glob("deps/nanotime_wrapper/*.c"))
 env.StaticLibrary(target = "CppUnitLite",
     source = env.Glob("deps/CppUnitLite/*.cpp"))
 
@@ -34,4 +37,4 @@ env.AlwaysBuild(tests)
 env.Alias('test', tests)
 
 # Program
-prog = env.Program("main", LIBS = ["Indexes"], source = ["main.cc"])
+prog = env.Program("main", LIBS = ["Indexes", "Nanotime"], source = ["main.cc"])

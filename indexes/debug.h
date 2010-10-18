@@ -45,8 +45,8 @@
         for (unsigned long i = 0; i< length; i++)
         {
             fprintf(stderr, fmt, seq[i]);
-            //if (strcmp(fmt, "%d") == 0 && i < length - 1)
-            //    fprintf(stderr, ", ");;
+            if (strcmp(fmt, "%d") == 0 && i < length - 1)
+                fprintf(stderr, ", ");;
         }
         fprintf(stderr, "\n");
     }
