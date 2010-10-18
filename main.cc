@@ -66,7 +66,7 @@ void parseArgs(int argc, char **argv, params_t & params)
     // TClap throws exceptions when invalid params are passed...
     try
     {
-        TCLAP::CmdLine cmd("wt", ' ', "0.2");
+        TCLAP::CmdLine cmd("WaveletTree Test Bed by Alex Bowe", ' ', "0.1.5");
         
         TCLAP::SwitchArg intSwitchArg("i", "intparse",
             "treats input file as integers instead of chars",
