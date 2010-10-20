@@ -133,7 +133,21 @@ namespace indexes
         return arity * position + child;
     }
     
-    
+    /** reads bit p from e */
+    inline size_t bitget(uint * e, size_t p)
+    {
+        return ((((e)[(p)/W_LEN] >> ((p)%W_LEN))) & 1);
+    }
+
+    /** sets bit p in e */
+    inline void bitset(uint * e, size_t p) {
+        e[p/W_LEN] |= (1<<(p%W_LEN));
+    }
+
+    /** cleans bit p in e */
+    inline void bitclean(uint * e, size_t p) {
+        e[p/W_LEN] &= ~(1<<(p%W_LEN));
+    }
 }
 
 #endif

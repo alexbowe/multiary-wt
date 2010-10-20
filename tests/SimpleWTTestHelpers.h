@@ -9,6 +9,9 @@
 using namespace std;
 using namespace indexes;
 
+namespace SWTHELP
+
+{
 template <class T>
 bool testCounts(const SimpleWaveletTree<T> & wt, map<T, CountVect> counters,
     const basic_string<T> & alphabet, int seq_length, bool isChar)
@@ -65,5 +68,5 @@ bool doCountTest(const basic_string<T> & input, map<T, CountVect> & counters,
     
     return testCounts(wt, counters, alphabet, input.length());
 }
-
+}
 #endif

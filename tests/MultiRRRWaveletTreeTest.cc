@@ -1,13 +1,13 @@
 #include "CppUnitLite/TestHarness.h"
-#include "indexes/SimpleWaveletTree.h"
+#include "indexes/MultiRRRWaveletTree.h"
 #include <vector>
 #include <map>
 #include "TestHelpers.h"
-#include "SimpleWTTestHelpers.h"
+#include "MultiRRRWTTestHelpers.h"
 
 using namespace std;
 
-TEST( SimpleWaveletTree, charRank )
+TEST( MultiRRRWaveletTree, charRank )
 {
     basic_string<char> input = "this isnt fun";
     
@@ -15,10 +15,10 @@ TEST( SimpleWaveletTree, charRank )
     map<char, CountVect> counters = prepareCountMap(input, alphabet);
     
     for (int arity = 2; arity <= 8; arity++)
-        CHECK(SWTHELP::doCountTest(input, counters, arity));
+        CHECK(MRRR::doCountTest(input, counters, arity));
 }
 
-TEST( SimpleWaveletTree, intRank )
+TEST( MultiRRRWaveletTree, intRank )
 {
     int ints[] = {1, 1, 3, 1, 0, 2, 4};
     basic_string<int> input(ints, ARRAY_SIZE(ints, int));
@@ -27,5 +27,5 @@ TEST( SimpleWaveletTree, intRank )
     map<int, CountVect> counters = prepareCountMap(input, alphabet);
     
     for (int arity = 2; arity <= 8; arity*=2)
-        CHECK(SWTHELP::doCountTest(input, counters, arity));
+        CHECK(MRRR::doCountTest(input, counters, arity));
 }

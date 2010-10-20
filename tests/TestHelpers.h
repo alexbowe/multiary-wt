@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <map>
-#include "indexes/WaveletTree.h"
 
 using namespace std;
 using namespace indexes;
