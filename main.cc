@@ -11,6 +11,7 @@
 #include "indexes/debug.h"
 #include "indexes/WaveletTree.h"
 #include "indexes/SimpleWaveletTree.h"
+#include "indexes/MultiRRRWaveletTree.h"
 
 // LIBCDS
 #include "WaveletTree.h"
@@ -281,7 +282,7 @@ stats_t doStuff(params_t & params)
 
             result = timeQuery(wt, alpha, params, result);
         }
-        else if ( params.structure == SIMPLE || params.structure == N_01RRR )
+        else if ( params.structure == SIMPLE )
         {
             SimpleWaveletTree<T> wt(input, params.arity);
             alpha = wt.getAlpha();
@@ -292,8 +293,12 @@ stats_t doStuff(params_t & params)
         }
         else if ( params.structure == N_01RRR )
         {
-            cerr << "NOT IMPLEMENTED YET" << endl;
-            exit(1);
+            MultiRRRWaveletTree<T> wt(input, params.arity);
+            alpha = wt.getAlpha();
+            result.sigma = alpha.length();
+            cerr << "Done!" << endl;
+
+            result = timeQuery(wt, alpha, params, result);
         }
         
     }
