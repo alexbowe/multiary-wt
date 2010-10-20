@@ -1,5 +1,5 @@
-#ifndef WAVELETTREE_H
-#define WAVELETTREE_H
+#ifndef SIMPLE_WAVELETTREE_H
+#define SIMPLE_WAVELETTREE_H
 
 #include <string>
 #include <vector>

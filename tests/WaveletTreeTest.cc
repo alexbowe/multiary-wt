@@ -45,7 +45,6 @@ TEST( WaveletTree, charRankHardcore )
     basic_string<char> alphabet = getAlphabet(input);
     map<char, CountVect> counters = prepareCountMap(input, alphabet);
     
-    
     for (int arity = 2; arity <= 8; arity*=2)
         for (int blocksize = 5; blocksize <= 10; blocksize+= 5)
             for (int sb_fact = 1; sb_fact <= 5; sb_fact+=2)

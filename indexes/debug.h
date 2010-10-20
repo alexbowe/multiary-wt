@@ -51,12 +51,12 @@
         fprintf(stderr, "\n");
     }
     // don't print commas for chars
-    inline void trace_seq_impl(const basic_string<char> & seq)
+    inline void trace_seq_impl(const std::basic_string<char> & seq)
     {
         char fmt[] = {'%', 'c', '\0'};
         trace_seq_impl(seq, fmt);
     }
-    inline void trace_seq_impl(const basic_string<int> & seq)
+    inline void trace_seq_impl(const std::basic_string<int> & seq)
     {
         char fmt[] = {'%', 'd', '\0'};
         trace_seq_impl(seq, fmt);

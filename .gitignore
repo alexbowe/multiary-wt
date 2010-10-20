@@ -10,6 +10,7 @@ data/*
 *.a
 *.o
 main
+wt_test
 runtests
 
 ## Stuff I don't want to add just yet ##
