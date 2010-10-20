@@ -25,13 +25,14 @@ env.Append(CPPPATH=[ "./", "deps",
                      "deps/libcds-v1.0.2/includes"])
 
 # Libs
-env.StaticLibrary(target = "Indexes", source = env.Glob("indexes/*.cc"))
+env.StaticLibrary(target = "Indexes", source = env.Glob("indexes/*.cc"),
+    LIBS = [ "libcds" ])
 env.StaticLibrary(target = "Nanotime", source = env.Glob("deps/nanotime_wrapper/*.c"))
 env.StaticLibrary(target = "CppUnitLite",
     source = env.Glob("deps/CppUnitLite/*.cpp"))
 
 # Unit Tests
-tests = env.Program("runtests", LIBS = ["CppUnitLite", "Indexes" ],
+tests = env.Program("runtests", LIBS = ["CppUnitLite", "Indexes", "libcds" ],
     source=[ "tests/TestRunner.cc", env.Glob("tests/*Test.cc")])
 # Run the unit tests as part of the build process
 env.AddPostAction(tests, "./runtests")
