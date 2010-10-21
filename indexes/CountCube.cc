@@ -6,7 +6,7 @@ using namespace boost;
 using namespace indexes;
 
 CountCube::CountCube(size_type arity, size_type blocksize) : ARITY(arity),
-    BLOCK_SIZE(blocksize), class_table()
+    BLOCK_SIZE(blocksize), _size(0), class_table()
 {
     classMapper = Mapper_ptr(new Mapper());
     blockMappers = vector<Mapper_ptr>();
@@ -39,12 +39,19 @@ void CountCube::add(const sequence_t & block, size_type & classNum,
     if ( classNum >= class_table.size() )
     {
         //TRACE(("New Count Table\n"));
-        class_table.push_back(count_table_ptr(new count_table_t()));
+        count_table_ptr ct(new count_table_t());
+        class_table.push_back(ct);
+        _size += sizeof(ct);
     }
     
     count_table_ptr & count_table = class_table[classNum];
     if ( offset >= count_table->size())
-        count_table->push_back(CountEntry(block, ARITY));
+    {
+        CountEntry ce = CountEntry(block, ARITY);
+        count_table->push_back(ce);
+        _size += ce.size();
+    }
+        
     
     // by this point it's already in the table...
 }

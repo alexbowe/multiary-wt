@@ -46,6 +46,13 @@ public:
     }
     inline const basic_string<T> & getAlpha()
     { return ALPHABET; }
+    inline size_type size()
+    {
+        return sizeof(encoding) + sizeof(ALPHABET)
+            + ALPHABET.size() * sizeof(T);
+    }
+    inline size_type seqSize() { return rrr.seqSize(); }
+    inline size_type rrrSize() { return rrr.size(); }
 };
 
 template <class T>

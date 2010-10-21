@@ -17,6 +17,8 @@ private:
     const size_type ARITY;
     const size_type BLOCK_SIZE;
     
+    size_type _size;
+    
     // Dimensions: [Class][Offset]([Symbol][Position])
     // maybe should use boost ptr_vector
     typedef std::vector<CountEntry> count_table_t;
@@ -47,6 +49,10 @@ public:
     {
         return (*class_table[classNum])[offset].rank(symbol, position,
             BLOCK_SIZE);
+    }
+    inline size_type size()
+    {
+        return sizeof(*this) + _size;
     }
 };
 
