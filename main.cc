@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <ctime>
 
-
 #include "tclap/CmdLine.h"
 #include "nanotime_wrapper/nanotime_wrapper.h"
 
@@ -199,7 +198,7 @@ inline unsigned char * unsignedCast(char * p)
 template <class T, class WT>
 stats_t timeQuery(WT & wt, basic_string<T> & alpha,
     params_t & params, stats_t & result)
-{   
+{
     cerr << "Generating " << params.queries << " Queries..." << endl;
     QueryGenerator<T> qgen(result.text_length, alpha);
     
@@ -256,7 +255,7 @@ stats_t doStuff(params_t & params)
         T * input_ptr = const_cast<T*>(input.c_str());
         cds::MapperNone * map;
         cds::wt_coder_binary * wc;
-        cds::BitSequenceBuilder * bsb;
+        cds::BitSequenceBuilderRRR * bsb;
         cds::Sequence * wt;
         // Adapted from Claude's example: http://libcds.recoded.cl/node/9
         map = new cds::MapperNone();
@@ -270,8 +269,8 @@ stats_t doStuff(params_t & params)
         
         // "we consider E to be free (64K shared among all the RRR02 bitmaps)"
         result.table_size = 64 * 1024;
-        //result.seq_size = ;
-        //size_t wt_size;
+        result.seq_size = bsb->getSize();
+        result.wt_size = wt->getSize();
         
         result = timeQuery(*wt, alpha, params, result);
         
@@ -304,6 +303,7 @@ stats_t doStuff(params_t & params)
             result.seq_size = wt.seqSize();
             result.wt_size = wt.size();
             
+            sleep(500);
             result = timeQuery(wt, alpha, params, result);
         }
         else if ( params.structure == N_01RRR )

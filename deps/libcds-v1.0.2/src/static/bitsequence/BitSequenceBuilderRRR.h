@@ -41,7 +41,9 @@ namespace cds_static
             virtual ~BitSequenceBuilderRRR() {}
             virtual BitSequence * build(uint * bitseq, size_t len) const;
             virtual BitSequence * build(const BitString & bs) const;
+            inline size_t getSize() { return size; }
         protected:
+            mutable size_t size;
             uint sample_rate;
     };
 };
