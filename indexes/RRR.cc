@@ -70,11 +70,8 @@ RRRSequence RRR::build(const sequence_t & seq)
     // Should have filled the whole thing up...
     myAssert(block_ind_total == numBlocks);
     
-    RRRSequence s = RRRSequence(classes, offsets, ARITY, BLOCK_SIZE,
-        SUPER_BLOCK_FACTOR, BITS_PER_CLASS, countCube);
-    sequence_sizes += sizeof(s) + s.size();
-    
-    return s;
+    return RRRSequence(classes, offsets, ARITY, BLOCK_SIZE,
+            SUPER_BLOCK_FACTOR, BITS_PER_CLASS, countCube);
 }
 
 RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
@@ -84,7 +81,7 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     // these will have to be constructed in smarter ways :)
     // like, store a number to say how many bit are required for the classes?
     // and packing the offsets
-    classes(classes_in), offsets(offsets_in)
+    _size(0), classes(classes_in), offsets(offsets_in)
 {
     // these really must be the same length...
     // myAssert(classes.size() == offsets.size());
@@ -99,8 +96,8 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     // TODO: COMPRESS THIS
     intermediates = inter_t(new int[arity * num_super_blocks * s_block_factor]);
     
-    _size += (arity * num_super_blocks * s_block_factor) * sizeof(int);
-    _size += NUM_BLOCKS * BITS_PER_CLASS;
+    //_size += (arity * num_super_blocks * s_block_factor) * sizeof(int);
+    _size += NUM_BLOCKS * ceil(BITS_PER_CLASS / sizeof(int));
     // TODO: UPDATE FOR OFFSETS WHEN YOU COMPRESS THEM
     //size += NUM_BLOCKS * 
     

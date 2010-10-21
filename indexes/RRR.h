@@ -53,7 +53,6 @@ private:
     const size_type BLOCK_SIZE;
     const size_type SUPER_BLOCK_FACTOR;
     const size_type BITS_PER_CLASS;
-    size_type sequence_sizes;
     
     CountCube countCube;
 public:
@@ -67,9 +66,7 @@ public:
             BITS_PER_CLASS, countCube);
     }
     inline void seal() { countCube.seal(); }
-    inline size_type size() { return sizeof(*this) + 
-        countCube.size(); }
-    inline size_type seqSize() { return sequence_sizes; }
+    inline size_type size() { return sizeof(*this) + countCube.size(); }
 };
 
 } // end of namespace

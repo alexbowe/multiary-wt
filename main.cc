@@ -303,7 +303,6 @@ stats_t doStuff(params_t & params)
             result.seq_size = wt.seqSize();
             result.wt_size = wt.size();
             
-            sleep(500);
             result = timeQuery(wt, alpha, params, result);
         }
         else if ( params.structure == N_01RRR )
