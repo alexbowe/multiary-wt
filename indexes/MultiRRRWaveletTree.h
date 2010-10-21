@@ -39,6 +39,7 @@ private:
     
     const wt_sequence_t ALPHABET;
     encoding_heap_t encoding;
+    size_type seq_size;
     
     void encodeNodeRecursive(const wt_sequence_t & sequence,
         size_type left, size_type right, size_type nodeIdx);
@@ -54,12 +55,19 @@ public:
     }
     inline const basic_string<T> & getAlpha()
     { return ALPHABET; }
+    inline size_type size()
+    {
+        return sizeof(encoding) + sizeof(ALPHABET)
+            + ALPHABET.size() * sizeof(T);
+    }
+    inline size_type seqSize() { return seq_size; }
+    inline size_type numNodes() { return encoding.size(); }
 };
 
 template <class T>
 MultiRRRWaveletTree<T>::MultiRRRWaveletTree(const wt_sequence_t & sequence, size_type arity) : 
     ARITY(arity),
-    ALPHABET(getAlphabet(sequence))
+    ALPHABET(getAlphabet(sequence)), seq_size(0)
 {
     myAssert(ARITY >= 2);
 
@@ -135,6 +143,8 @@ void MultiRRRWaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     
     //encoding[nodeIdx] = rrr.build(mapped_sequence);
     encoding[nodeIdx] = makeMultiRRRNode(mapped_sequence, ARITY);
+    seq_size += encoding[nodeIdx].rrrseq->getSize() +
+        sizeof(m_rrr_encoding_node_t);
     
     // If we have an alphabet of sigma = arity, we won't gain any more
     // information by encoding sub-levels... it is represented in the same

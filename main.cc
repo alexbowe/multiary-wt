@@ -4,7 +4,6 @@
 #include <cstdlib>
 #include <ctime>
 
-
 #include "tclap/CmdLine.h"
 #include "nanotime_wrapper/nanotime_wrapper.h"
 
@@ -186,6 +185,8 @@ typedef struct stats
     size_t table_size;
     size_t seq_size;
     size_t wt_size;
+    stats() : time(0), text_length(0), sigma(0), table_size(0), seq_size(0),
+        wt_size(0) {}
 } stats_t;
 
 inline unsigned int * unsignedCast(int * p)
@@ -197,7 +198,7 @@ inline unsigned char * unsignedCast(char * p)
 template <class T, class WT>
 stats_t timeQuery(WT & wt, basic_string<T> & alpha,
     params_t & params, stats_t & result)
-{   
+{
     cerr << "Generating " << params.queries << " Queries..." << endl;
     QueryGenerator<T> qgen(result.text_length, alpha);
     
@@ -254,7 +255,7 @@ stats_t doStuff(params_t & params)
         T * input_ptr = const_cast<T*>(input.c_str());
         cds::MapperNone * map;
         cds::wt_coder_binary * wc;
-        cds::BitSequenceBuilder * bsb;
+        cds::BitSequenceBuilderRRR * bsb;
         cds::Sequence * wt;
         // Adapted from Claude's example: http://libcds.recoded.cl/node/9
         map = new cds::MapperNone();
@@ -265,6 +266,11 @@ stats_t doStuff(params_t & params)
         wt = new cds::WaveletTree(unsignedCast(input_ptr),
             result.text_length, wc, bsb, map);
         cerr << "Done!" << endl;
+        
+        // "we consider E to be free (64K shared among all the RRR02 bitmaps)"
+        result.table_size = 64 * 1024;
+        result.seq_size = bsb->getSize();
+        result.wt_size = wt->getSize();
         
         result = timeQuery(*wt, alpha, params, result);
         
@@ -279,6 +285,10 @@ stats_t doStuff(params_t & params)
             alpha = wt.getAlpha();
             result.sigma = alpha.length();
             cerr << "Done!" << endl;
+            
+            result.table_size = wt.rrrSize();
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
 
             result = timeQuery(wt, alpha, params, result);
         }
@@ -288,7 +298,11 @@ stats_t doStuff(params_t & params)
             alpha = wt.getAlpha();
             result.sigma = alpha.length();
             cerr << "Done!" << endl;
-
+            
+            result.table_size = 0;
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
+            
             result = timeQuery(wt, alpha, params, result);
         }
         else if ( params.structure == N_01RRR )
@@ -297,7 +311,13 @@ stats_t doStuff(params_t & params)
             alpha = wt.getAlpha();
             result.sigma = alpha.length();
             cerr << "Done!" << endl;
-
+            
+            // "we consider E to be free
+            // (64K shared among all the RRR02 bitmaps)"
+            result.table_size = 64 * 1024;
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
+            
             result = timeQuery(wt, alpha, params, result);
         }
         
@@ -310,8 +330,9 @@ int main(int argc, char **argv)
 {
     // Get the value parsed by each arg. 
     params_t params;
-    
+
     parseArgs(argc, argv, params);
+    cerr << "Parsed arguments OK" << endl;
     
     stats_t result;
     
@@ -322,12 +343,13 @@ int main(int argc, char **argv)
     else
         result = doStuff<char>(params);
     
-    cout << "Sigma            : " << result.sigma << endl;
-    cout << "Mean Time   (ms) : " << ((float)result.time/params.queries)/1e6
-         << endl;
-    cout << "Seq Size (bytes) : " << endl;
-    cout << "RRR Size (bytes) : " << endl;
-    cout << "WT Size  (bytes) : " << endl;
+    cout << "Text Length            : " << result.text_length << endl;
+    cout << "Sigma                  : " << result.sigma << endl;
+    cout << "Mean Time         (ms) : " <<
+         ((float)result.time/params.queries)/1e6 << endl;
+    cout << "Total Seq Size (bytes) : " << result.seq_size << endl;
+    cout << "RRR Table Size (bytes) : " << result.table_size << endl;
+    cout << "WT Size        (bytes) : " << result.wt_size << endl;
     
     return 0;
 }

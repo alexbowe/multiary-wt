@@ -12,7 +12,7 @@ using namespace indexes;
 // Pad blocks with 0 if they don't allign correctly
 const symbol_t RRR::PAD_VALUE = 0;
 
-RRRSequence::RRRSequence(): num_super_blocks(0) { }
+RRRSequence::RRRSequence(): _size(0), num_super_blocks(0) { }
 
 /** Constructs a RRR of specified arity, block size and super block factor. */
 RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
@@ -71,7 +71,7 @@ RRRSequence RRR::build(const sequence_t & seq)
     myAssert(block_ind_total == numBlocks);
     
     return RRRSequence(classes, offsets, ARITY, BLOCK_SIZE,
-        SUPER_BLOCK_FACTOR, BITS_PER_CLASS, countCube);
+            SUPER_BLOCK_FACTOR, BITS_PER_CLASS, countCube);
 }
 
 RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
@@ -81,7 +81,7 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     // these will have to be constructed in smarter ways :)
     // like, store a number to say how many bit are required for the classes?
     // and packing the offsets
-    classes(classes_in), offsets(offsets_in)
+    _size(0), classes(classes_in), offsets(offsets_in)
 {
     // these really must be the same length...
     // myAssert(classes.size() == offsets.size());
@@ -93,7 +93,13 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     // Z = sym (arity)
     // Y = super block (num_super_blocks)
     // X = block (s_block_factor) - arranged this way for caching
+    // TODO: COMPRESS THIS
     intermediates = inter_t(new int[arity * num_super_blocks * s_block_factor]);
+    
+    //_size += (arity * num_super_blocks * s_block_factor) * sizeof(int);
+    _size += NUM_BLOCKS * ceil(BITS_PER_CLASS / sizeof(int));
+    // TODO: UPDATE FOR OFFSETS WHEN YOU COMPRESS THEM
+    //size += NUM_BLOCKS * 
     
     // Populate intermediates table
     

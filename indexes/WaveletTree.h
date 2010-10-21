@@ -31,6 +31,8 @@ private:
     const wt_sequence_t ALPHABET;
     encoding_heap_t encoding;
     
+    size_type seq_size;
+    
     void encodeNodeRecursive(const wt_sequence_t & sequence,
         size_type left, size_type right, size_type nodeIdx);
     
@@ -46,6 +48,16 @@ public:
     }
     inline const basic_string<T> & getAlpha()
     { return ALPHABET; }
+    inline size_type size()
+    {
+        return sizeof(encoding) + sizeof(ALPHABET)
+            + ALPHABET.size() * sizeof(T);
+    }
+    inline size_type seqSize() { 
+        TRACE(("SEQ_SIZE: %d\n", seq_size));
+        return seq_size; }
+    inline size_type rrrSize() { return rrr.size(); }
+    inline size_type numNodes() { return encoding.size(); }
 };
 
 template <class T>
@@ -53,7 +65,7 @@ WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
     size_type block_size, size_type s_block_factor) : 
     ARITY(arity),
     rrr(arity, block_size, s_block_factor),
-    ALPHABET(getAlphabet(sequence))
+    ALPHABET(getAlphabet(sequence)), seq_size(0)
 {
     myAssert(ARITY >= 2);
 
@@ -79,6 +91,7 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     myAssert(nodeIdx < encoding.size());
     
     encoding[nodeIdx] = rrr.build(mapped_sequence);
+    seq_size += encoding[nodeIdx].size();
     
     // If we have an alphabet of sigma = arity, we won't gain any more
     // information by encoding sub-levels... it is represented in the same

@@ -6,13 +6,14 @@
 using namespace std;
 using namespace indexes;
 
-CountEntry::CountEntry(const sequence_t & block, size_type arity)
+CountEntry::CountEntry(const sequence_t & block, size_type arity) : _size(0)
 {
     const size_type BLOCKSIZE(block.size());
     const size_type FIELDSIZE(getBitsRequired(BLOCKSIZE));
     const size_type NUM_INTS(getUintsRequired(arity * BLOCKSIZE, FIELDSIZE));
     
     counts = boost::shared_array<uint>(new uint[NUM_INTS]);
+    _size += sizeof(boost::shared_array<uint>) + sizeof(uint) * NUM_INTS;
     
     // cumulative sum for each symbol
     uint count_index = 0;

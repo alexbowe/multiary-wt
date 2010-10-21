@@ -17,6 +17,7 @@ class RRRSequence
 {
 private:
     friend class RRR;
+    size_type _size;
     boost::shared_array<uint> classes;
     // prefix sum (on bits) for offsets
     // boost::shared_array<int> prefix_sum;
@@ -38,6 +39,7 @@ private:
 public:
     // empty constructor for us to hold in our outer vector
     RRRSequence();
+    inline size_type size() { return sizeof(*this) + _size; }
 };
 
 class RRR
@@ -64,6 +66,7 @@ public:
             BITS_PER_CLASS, countCube);
     }
     inline void seal() { countCube.seal(); }
+    inline size_type size() { return sizeof(*this) + countCube.size(); }
 };
 
 } // end of namespace
