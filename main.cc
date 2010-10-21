@@ -186,6 +186,8 @@ typedef struct stats
     size_t table_size;
     size_t seq_size;
     size_t wt_size;
+    stats() : time(0), text_length(0), sigma(0), table_size(0), seq_size(0),
+        wt_size(0) {}
 } stats_t;
 
 inline unsigned int * unsignedCast(int * p)
@@ -266,6 +268,11 @@ stats_t doStuff(params_t & params)
             result.text_length, wc, bsb, map);
         cerr << "Done!" << endl;
         
+        // "we consider E to be free (64K shared among all the RRR02 bitmaps)"
+        result.table_size = 64 * 1024;
+        //result.seq_size = ;
+        //size_t wt_size;
+        
         result = timeQuery(*wt, alpha, params, result);
         
         delete wc;
@@ -279,6 +286,10 @@ stats_t doStuff(params_t & params)
             alpha = wt.getAlpha();
             result.sigma = alpha.length();
             cerr << "Done!" << endl;
+            
+            result.table_size = wt.rrrSize();
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
 
             result = timeQuery(wt, alpha, params, result);
         }
@@ -288,7 +299,11 @@ stats_t doStuff(params_t & params)
             alpha = wt.getAlpha();
             result.sigma = alpha.length();
             cerr << "Done!" << endl;
-
+            
+            result.table_size = 0;
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
+            
             result = timeQuery(wt, alpha, params, result);
         }
         else if ( params.structure == N_01RRR )
@@ -297,7 +312,13 @@ stats_t doStuff(params_t & params)
             alpha = wt.getAlpha();
             result.sigma = alpha.length();
             cerr << "Done!" << endl;
-
+            
+            // "we consider E to be free
+            // (64K shared among all the RRR02 bitmaps)"
+            result.table_size = 64 * 1024;
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
+            
             result = timeQuery(wt, alpha, params, result);
         }
         
@@ -310,8 +331,9 @@ int main(int argc, char **argv)
 {
     // Get the value parsed by each arg. 
     params_t params;
-    
+
     parseArgs(argc, argv, params);
+    cerr << "Parsed arguments OK" << endl;
     
     stats_t result;
     
@@ -322,12 +344,13 @@ int main(int argc, char **argv)
     else
         result = doStuff<char>(params);
     
-    cout << "Sigma            : " << result.sigma << endl;
-    cout << "Mean Time   (ms) : " << ((float)result.time/params.queries)/1e6
-         << endl;
-    cout << "Seq Size (bytes) : " << endl;
-    cout << "RRR Size (bytes) : " << endl;
-    cout << "WT Size  (bytes) : " << endl;
+    cout << "Text Length            : " << result.text_length << endl;
+    cout << "Sigma                  : " << result.sigma << endl;
+    cout << "Mean Time         (ms) : " <<
+         ((float)result.time/params.queries)/1e6 << endl;
+    cout << "Total Seq Size (bytes) : " << result.seq_size << endl;
+    cout << "RRR Table Size (bytes) : " << result.table_size << endl;
+    cout << "WT Size        (bytes) : " << result.wt_size << endl;
     
     return 0;
 }

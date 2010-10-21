@@ -53,6 +53,7 @@ public:
     }
     inline size_type seqSize() { return rrr.seqSize(); }
     inline size_type rrrSize() { return rrr.size(); }
+    inline size_type numNodes() { return encoding.size(); }
 };
 
 template <class T>

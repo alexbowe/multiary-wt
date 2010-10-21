@@ -52,6 +52,7 @@ public:
     }
     inline size_type seqSize() { return seq_size; }
     //inline size_type rrrSize() { return rrr.size(); }
+    inline size_type numNodes() { return encoding.size(); }
 };
 
 template <class T>
@@ -121,7 +122,7 @@ void SimpleWaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     //encoding[nodeIdx] = rrr.build(mapped_sequence);
     encoding[nodeIdx] = makeSimpleNode(mapped_sequence, ARITY);
     seq_size += encoding[nodeIdx].num_blocks() *
-        sizeof(encoding_node_t::block_type);
+        sizeof(encoding_node_t::block_type) + sizeof(encoding_node_t);
     
     // If we have an alphabet of sigma = arity, we won't gain any more
     // information by encoding sub-levels... it is represented in the same
