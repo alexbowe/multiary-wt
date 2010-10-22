@@ -12,26 +12,27 @@ using namespace indexes;
 // Pad blocks with 0 if they don't allign correctly
 const symbol_t RRR::PAD_VALUE = 0;
 
-RRRSequence::RRRSequence(): _size(0), num_super_blocks(0) { }
+RRRSequence::RRRSequence(): _size(0), num_super_blocks(0),
+    BITS_PER_CLASS(0) { }
 
 /** Constructs a RRR of specified arity, block size and super block factor. */
 RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
     ARITY(arity),
     BLOCK_SIZE(block_size),
     SUPER_BLOCK_FACTOR(s_block_factor),
-    // As per mentioned in Ferragina et al
-    BITS_PER_CLASS(ceil(ARITY * log(BLOCK_SIZE + 1)/log(2))),
+    MAX_BITS_PER_CLASS(ceil(ARITY * log(BLOCK_SIZE + 1)/log(2))),
     countCube(arity, block_size)
 { }
 
 /** Builds RRR Sequence from input vector. */
 RRRSequence RRR::build(const sequence_t & seq)
 {
+    size_type maxClass = 0;
     size_type classNum, offset;
     sequence_t block(BLOCK_SIZE, PAD_VALUE);
     size_type numBlocks = ceil(seq.size() / (float)BLOCK_SIZE);
     
-    size_type numUints = numBlocks * BITS_PER_CLASS;
+    size_type numUints = numBlocks * MAX_BITS_PER_CLASS;
     boost::shared_array<uint> classes =
         boost::shared_array<uint>(new uint[numUints]);
     vector<int> offsets = vector<int>(numBlocks);
@@ -55,9 +56,11 @@ RRRSequence RRR::build(const sequence_t & seq)
             // insert block into CountCube
             countCube.add(block, classNum, offset);
             
+            if (classNum > maxClass) maxClass = classNum;
+            
             // add to the classes and offsets vectors...
             myAssert(block_ind_total < numBlocks);
-            set_field(classes.get(), BITS_PER_CLASS, block_ind_total,
+            set_field(classes.get(), MAX_BITS_PER_CLASS, block_ind_total,
                 classNum);
             offsets[block_ind_total++] = offset;
             
@@ -70,18 +73,31 @@ RRRSequence RRR::build(const sequence_t & seq)
     // Should have filled the whole thing up...
     myAssert(block_ind_total == numBlocks);
     
-    return RRRSequence(classes, offsets, ARITY, BLOCK_SIZE,
-            SUPER_BLOCK_FACTOR, BITS_PER_CLASS, countCube);
+    size_type bitsPerClass = getBitsRequired(maxClass);
+    
+    // shrink class array
+    boost::shared_array<uint> classesShrunk =
+        boost::shared_array<uint>(new uint[numBlocks * bitsPerClass]);
+    for (size_type i = 0; i < numBlocks; i++)
+    {
+        size_type c = get_field(classes.get(), MAX_BITS_PER_CLASS,
+            i);
+        set_field(classesShrunk.get(), bitsPerClass, i, c);
+    }
+    
+    return RRRSequence(classesShrunk, offsets, ARITY, BLOCK_SIZE,
+            SUPER_BLOCK_FACTOR, bitsPerClass, countCube);
 }
 
 RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     const vector<int> & offsets_in, const size_type arity,
     const size_type blocksize, const size_type s_block_factor,
-    const size_type BITS_PER_CLASS, const CountCube & cc) :
+    const size_type bitsPerClass, const CountCube & cc) :
     // these will have to be constructed in smarter ways :)
     // like, store a number to say how many bit are required for the classes?
     // and packing the offsets
-    _size(0), classes(classes_in), offsets(offsets_in)
+    _size(0), classes(classes_in), offsets(offsets_in),
+    BITS_PER_CLASS(bitsPerClass)
 {
     // these really must be the same length...
     // myAssert(classes.size() == offsets.size());
@@ -141,7 +157,6 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
 
 size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     size_type s_block_factor,
-    size_type BITS_PER_CLASS,
     const CountCube & cc) const
 {
     size_type sym_idx = pos % blocksize;
