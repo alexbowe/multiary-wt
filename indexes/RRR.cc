@@ -147,8 +147,9 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     // X = super block (num_super_blocks)
     size_type inter_bits = getBitsRequired(
         s_block_factor * blocksize * num_super_blocks);
+    size_type num_inter_samples = arity * (num_super_blocks - 1);
     size_type inter_uints = getUintsRequired(inter_bits, 
-        arity * (num_super_blocks - 1));
+        num_inter_samples);
     intermediates = inter_t(new uint[inter_uints]);
     
     // O_SAMPLES: fixed-width array for pre-computed positions for offsets
@@ -178,7 +179,6 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
         const size_type offset = get_var_field(offsets.get(), offset_pos,
             offset_pos + offset_bits - 1);
         
-        
         // Super block boundary:
         if (i > 0 && block_idx == 0)
         {
@@ -192,9 +192,8 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             // X = super block (num_super_blocks)
             for (size_type sym = 0; sym < arity; sym++)
             {
-                myAssert(super_block_idx > 0);
-                size_type intermediate_idx = get3DIdx(num_super_blocks,
-                    arity, super_block_idx - 1, sym, 0);
+                size_type intermediate_idx = sym * num_super_blocks +
+                    super_block_idx - 1;
                 set_field(intermediates.get(), inter_bits, intermediate_idx,
                     totals[sym]);
             }
@@ -221,42 +220,26 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     size_type sym_idx = pos % blocksize;
     size_type global_block_idx = pos / blocksize;
     size_type super_block_idx = global_block_idx / s_block_factor;
-    size_type block_idx = global_block_idx % s_block_factor;
+    //size_type block_idx = global_block_idx % s_block_factor;
     size_type inter_bits = getBitsRequired(
         s_block_factor * blocksize * num_super_blocks);
     
     size_type count = 0;
     
-    // get count from previous super blocks
+    // get count from all previous super blocks
     if (super_block_idx > 0)
     {
-        size_type inter_idx = get3DIdx(num_super_blocks,
-            arity, super_block_idx - 1, sym, 0);
+        size_type inter_idx = sym * num_super_blocks +
+            super_block_idx - 1;
         count += get_field(intermediates.get(), inter_bits, inter_idx);
     }
-
+    
     size_type o_pos = 0;
     size_type o_size = 0;
-    
-    // get previous block counts within this superblock
-    for (size_type i = 0; i < block_idx && i < s_block_factor; i++)
-    {
-        size_type block_diff = block_idx - i;
-        size_type g_pre_block_i = global_block_idx - block_diff;
-        size_type classNum = get_field(classes.get(), BITS_PER_CLASS,
-            g_pre_block_idx);
-        
-    }
-    
-    size_type classNum = get_field(classes.get(), BITS_PER_CLASS,
-        global_block_idx);
-    
-    size_type o_pos = 0;
     if (super_block_idx > 0)
     {
         o_pos = get_field(o_samples.get(), O_REF_BITS, super_block_idx - 1);
     }
-    size_type o_size = 0;
 
     // sample offsets
     size_type first_block = super_block_idx * s_block_factor;
@@ -264,16 +247,18 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     {
         size_type c = get_field(classes.get(), BITS_PER_CLASS, i);
         o_size = cc.getNumOffsetBits(c);
-        if ( i < global_block_idx )
-            o_pos += o_size;
+        
+        size_type offset = get_var_field(offsets.get(), o_pos,
+            o_pos + o_size - 1);
+        size_type cc_count;
+        if (i < global_block_idx)
+            cc_count = cc.rank(c, offset, sym, blocksize-1);
+        else
+            cc_count = cc.rank(c, offset, sym, sym_idx);
+            
+        count += cc_count;
+        o_pos += o_size;
     }
-    
-    size_type offset = get_var_field(offsets.get(), o_pos,
-        o_pos + o_size - 1);
-    size_type cc_count = cc.rank(classNum, offset, sym, sym_idx);
-    //TRACE(("FROM CC: %d\n", cc_count));
-    // look up current block pos using CountCube
-    count += cc_count;
     
     //TRACE(("[RRRSequence.rank] Count: %d\n", count));
     return count;
