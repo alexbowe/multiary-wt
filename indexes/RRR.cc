@@ -152,11 +152,14 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
         arity * num_super_blocks * s_block_factor);
     intermediates = inter_t(new uint[inter_uints]);
     
+    // O_SAMPLES: fixed-width array for pre-computed positions for offsets
+    // at super block boundary
     // how many bits required to point to every possible offset
     // in the offset array?
     size_type O_REF_BITS(getBitsRequired(TOTAL_OFFSET_BITS));
-    size_type num_o_samples = (num_super_blocks - 1);
+    size_type num_o_samples = (num_super_blocks - 1); // dont need for SB0
     size_type num_o_uints = getUintsRequired(O_REF_BITS, num_o_samples);
+    o_samples = inter_t(new uint[num_o_uints]);
     
     _size += inter_uints * sizeof(int);
     _size += NUM_BLOCKS * ceil(BITS_PER_CLASS / sizeof(uint));
@@ -175,15 +178,19 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
         const size_type offset_bits = cc.getNumOffsetBits(classNum);
         const size_type offset = get_var_field(offsets.get(), offset_pos,
             offset_pos + offset_bits - 1);
-        offset_pos += offset_bits;
+        
         
         // Super block boundary:
         if (i > 0 && block_idx == 0)
         {
+            set_field(o_samples.get(), O_REF_BITS,
+                super_block_idx - 1, offset_pos);
             //TRACE(("RESETING\n"));
             // reset running total
             totals.assign(arity, 0);
         }
+        
+        offset_pos += offset_bits;
         
         // get last value in block, for each symbol
         for (size_type sym = 0; sym < arity; sym++)
@@ -195,16 +202,8 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             totals[sym] += rank;
             size_type intermediate_idx = get3DIdx(s_block_factor,
                 num_super_blocks, block_idx, super_block_idx, sym);
-            /** Retrieve a given index from array A where every value uses len bits
-             * @param A Array
-             * @param len Length in bits of each field
-             * @param index Position to be retrieved
-             */
             set_field(intermediates.get(), inter_bits, intermediate_idx,
             totals[sym]);
-            //intermediates[intermediate_idx] = totals[sym];
-            //TRACE(("S%d b%d %d: %d\n", super_block_idx, block_idx, sym,
-            //    totals[sym]));
         }
     }
 
