@@ -5,6 +5,7 @@
 #include <vector>
 #include "boost/dynamic_bitset.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/shared_array.hpp"
 #include "common.h"
 #include "utility.h"
 #include "debug.h"
@@ -21,8 +22,10 @@ namespace indexes
 
 typedef struct node_struct
 {
+    typedef boost::shared_array<uint> count_t;
     typedef boost::shared_ptr<cds::BitSequenceRRR> rrrseq_ptr;
     size_type length;
+    count_t sym_counts;
     rrrseq_ptr rrrseq;
 } m_rrr_encoding_node_t;
 
@@ -81,7 +84,7 @@ MultiRRRWaveletTree<T>::MultiRRRWaveletTree(const wt_sequence_t & sequence, size
 }
 
 template <class T>
-m_rrr_encoding_node_t makeMultiRRRNode(const basic_string<T> & seq, size_type arity)
+m_rrr_encoding_node_t makeMultiRRRNode(const basic_string<T> & seq, size_type arity, size_type & seq_size)
 {
     size_type length = seq.length();
     size_t num_bits = arity * length;
@@ -89,8 +92,15 @@ m_rrr_encoding_node_t makeMultiRRRNode(const basic_string<T> & seq, size_type ar
     
     uint * temp = (uint*) calloc(num_uints, sizeof(uint));
     
+    boost::shared_array<uint> counts = boost::shared_array<uint>(
+        new uint[arity - 1]);
+    seq_size += (arity - 1) * sizeof(uint);
     // X axis = pos
     // Y axis = sym
+    
+    for (size_type sym = 0; sym < arity - 1; sym++)
+        counts[sym] = 0;
+        
     for ( size_type pos = 0; pos < length; pos++)
     {
         for (size_type sym = 0; sym < arity; sym++)
@@ -98,13 +108,19 @@ m_rrr_encoding_node_t makeMultiRRRNode(const basic_string<T> & seq, size_type ar
             size_type index = sym * length + pos;
             if ((unsigned int)seq[pos] == sym)
             {
+                counts[sym]++;
                 bitset(temp, index);
             }
         }
     }
     
+    // accumulate
+    for (size_type sym = 1; sym < arity - 1; sym++)
+        counts[sym] += counts[sym-1];
+    
     m_rrr_encoding_node_t node;
     node.length = num_bits;
+    node.sym_counts = counts;
     node.rrrseq = m_rrr_encoding_node_t::rrrseq_ptr(
         new cds::BitSequenceRRR(temp, num_bits));
     free(temp);
@@ -121,8 +137,9 @@ inline size_type multiRRRRank(size_type sym, size_type pos,
     // first position for this symbol, since we want the count before that
     // (which may be other symbols)
     // if sym is 0, dont need to do this -> there is nothing before it
-    size_type rank_0 = (sym == 0)? 0 : 
-        node.rrrseq->rank1((sym - 1) * length + length - 1);
+    //size_type rank_0 = (sym == 0)? 0 : 
+    //    node.rrrseq->rank1((sym - 1) * length + length - 1);
+    size_type rank_0 = (sym == 0)? 0 : node.sym_counts[sym - 1];
     // position that we actually want to query
     size_type real_pos = sym * length + pos;
     
@@ -142,7 +159,7 @@ void MultiRRRWaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
         myAssert(nodeIdx < encoding.size());
 
         //encoding[nodeIdx] = rrr.build(mapped_sequence);
-        encoding[nodeIdx] = makeMultiRRRNode(mapped_sequence, ARITY);
+        encoding[nodeIdx] = makeMultiRRRNode(mapped_sequence, ARITY, seq_size);
         seq_size += encoding[nodeIdx].rrrseq->getSize() + 
             sizeof(m_rrr_encoding_node_t);
     }
