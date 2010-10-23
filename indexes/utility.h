@@ -5,13 +5,14 @@
 #include <set>
 #include <cmath>
 #include "common.h"
+#include "debug.h"
 
 using namespace std;
 
 namespace indexes
 {
     typedef unsigned int uint;
-    const static unsigned int W_LEN = 32; // bits in an int
+    const static unsigned int W_LEN = sizeof(uint) * 8; // bits in an int
     
     /** Returns required index of 3D array */
     inline size_type get3DIdx(const size_type X, const size_type Y,
@@ -105,7 +106,7 @@ namespace indexes
     inline void set_field(uint *A, const size_t len,
         const size_t index, const uint x)
     {
-        if (len==0) return;
+        if ( len == 0) return;
         size_type i = index * len / W_LEN, j=index*len-i*W_LEN;
         uint mask = ((j+len) < W_LEN ? ~0u << (j+len) : 0)
             | ((W_LEN-j) < W_LEN ? ~0u >> (W_LEN-j) : 0);
@@ -122,13 +123,21 @@ namespace indexes
      * @param fin Retrieve until end-1
      */
     inline uint get_var_field(const uint *A, const size_t ini, const size_t fin) {
-        if(ini==fin+1) return 0;
-        size_t i=ini/W_LEN, j=ini-W_LEN*i;
+        if (ini == fin+1)
+            return 0;
+        
+        // find starting int
+        size_t i = ini / W_LEN;
+        size_t j = ini - W_LEN * i;
         uint result;
-        uint len = (uint)(fin-ini+1);
-        if (j+len <= W_LEN)
-            result = (A[i] << (W_LEN-j-len)) >> (W_LEN-len);
-        else {
+        uint len = (uint)( fin - ini + 1 );
+        
+        if (j + len <= W_LEN)
+        {
+            result = (A[i] << (W_LEN - j - len)) >> (W_LEN - len);
+        }
+        else
+        {
             result = A[i] >> j;
             result = result | (A[i+1] << (W_LEN*2-j-len)) >> (W_LEN-len);
         }
@@ -141,12 +150,13 @@ namespace indexes
      * @param fin Store until end-1
      * @param x Value to be stored
      */
-    inline void set_var_field(uint *A, const size_t ini,
-        const size_t fin, const uint x)
+    inline void set_var_field(uint *A, const size_t ini, const size_t fin,
+        const uint x)
     {
-        if(ini==fin+1) return;
-        uint i=ini/W_LEN, j=ini-i*W_LEN;
-        uint len = (fin-ini+1);
+        if (ini == fin + 1) return;
+        
+        uint i = ini/W_LEN, j = ini - i * W_LEN;
+        uint len = (fin - ini + 1);
         uint mask = ((j+len) < W_LEN ? ~0u << (j+len) : 0)
             | ((W_LEN-j) < W_LEN ? ~0u >> (W_LEN-j) : 0);
         A[i] = (A[i] & mask) | x << j;
