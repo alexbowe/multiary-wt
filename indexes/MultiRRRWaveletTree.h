@@ -136,22 +136,16 @@ void MultiRRRWaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     size_type left, size_type right, size_type nodeIdx = 0)
 {
     SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
-    // for our baseline this will be binary and stored in bitvectors...
-    sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
     
-    /*if (nodeIdx >= encoding.size())
     {
-        TRACE(("mapped_sequence: "));
-        TRACE_SEQ((mapped_sequence));
-        TRACE(("nodeIdx = %d, encoding.size = %d\n", nodeIdx, encoding.size()));
-        return;
-    }*/
-    myAssert(nodeIdx < encoding.size());
-    
-    //encoding[nodeIdx] = rrr.build(mapped_sequence);
-    encoding[nodeIdx] = makeMultiRRRNode(mapped_sequence, ARITY);
-    seq_size += encoding[nodeIdx].rrrseq->getSize() + 
-        sizeof(m_rrr_encoding_node_t);
+        sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
+        myAssert(nodeIdx < encoding.size());
+
+        //encoding[nodeIdx] = rrr.build(mapped_sequence);
+        encoding[nodeIdx] = makeMultiRRRNode(mapped_sequence, ARITY);
+        seq_size += encoding[nodeIdx].rrrseq->getSize() + 
+            sizeof(m_rrr_encoding_node_t);
+    }
     
     // If we have an alphabet of sigma = arity, we won't gain any more
     // information by encoding sub-levels... it is represented in the same

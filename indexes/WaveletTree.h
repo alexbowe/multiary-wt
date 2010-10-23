@@ -85,13 +85,15 @@ void WaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     size_type left, size_type right, size_type nodeIdx = 0)
 {
     SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
-    // for our baseline this will be binary and stored in bitvectors...
-    sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
     
-    myAssert(nodeIdx < encoding.size());
-    
-    encoding[nodeIdx] = rrr.build(mapped_sequence);
-    seq_size += encoding[nodeIdx].size();
+    {
+        sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
+        
+        myAssert(nodeIdx < encoding.size());
+
+        encoding[nodeIdx] = rrr.build(mapped_sequence);
+        seq_size += encoding[nodeIdx].size();
+    }
     
     // If we have an alphabet of sigma = arity, we won't gain any more
     // information by encoding sub-levels... it is represented in the same
