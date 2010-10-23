@@ -120,7 +120,7 @@ RRRSequence RRR::build(const sequence_t & seq)
     
     return RRRSequence(classesShrunk, offsetsShrunk, offsets.size(),
         ARITY, BLOCK_SIZE, SUPER_BLOCK_FACTOR, bitsPerClass, offsetUints,
-        countCube);
+        offset_bits_total, countCube);
 }
 
 RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
@@ -129,7 +129,8 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     const size_type arity,
     const size_type blocksize, const size_type s_block_factor,
     const size_type bitsPerClass,
-    const size_type TOTAL_OFFSET_UINTS, const CountCube & cc) :
+    const size_type TOTAL_OFFSET_UINTS,
+    const size_type TOTAL_OFFSET_BITS, const CountCube & cc) :
     // these will have to be constructed in smarter ways :)
     // like, store a number to say how many bit are required for the classes?
     // and packing the offsets
@@ -150,6 +151,12 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     size_type inter_uints = getUintsRequired(inter_bits,
         arity * num_super_blocks * s_block_factor);
     intermediates = inter_t(new uint[inter_uints]);
+    
+    // how many bits required to point to every possible offset
+    // in the offset array?
+    size_type O_REF_BITS(getBitsRequired(TOTAL_OFFSET_BITS));
+    size_type num_o_samples = (num_super_blocks - 1);
+    size_type num_o_uints = getUintsRequired(O_REF_BITS, num_o_samples);
     
     _size += inter_uints * sizeof(int);
     _size += NUM_BLOCKS * ceil(BITS_PER_CLASS / sizeof(uint));
