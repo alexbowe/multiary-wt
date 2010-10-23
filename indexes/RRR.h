@@ -24,9 +24,11 @@ private:
     boost::shared_array<uint> offsets;
     typedef boost::shared_array<uint> inter_t;
     inter_t intermediates;
+    inter_t o_samples;
     
     size_type num_super_blocks;
     size_type BITS_PER_CLASS;
+    size_type O_REF_BITS;
     
     RRRSequence(const boost::shared_array<uint> & classes_in,
         const boost::shared_array<uint> & offsets_in,
@@ -35,6 +37,7 @@ private:
         const size_type s_block_factor,
         const size_type BITS_PER_CLASS,
         const size_type TOTAL_OFFSET_UINTS,
+        const size_type TOTAL_OFFSET_BITS,
         const CountCube & cc);
         
     size_type rank(symbol_t sym, size_type pos, size_type blocksize,
