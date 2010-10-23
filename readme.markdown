@@ -15,8 +15,8 @@ Changes
 
 Plans
 -----   
- * Reduce WT construction memory (stop using strings, maybe do breadth-first
-   traversal)
+ * Reduce WT construction memory (stop using filtered strings, maybe use bitmaps
+   instead)
  * Pre-generate CountCube
 
 Obtaining and Contributing
