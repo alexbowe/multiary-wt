@@ -351,7 +351,7 @@ int main(int argc, char **argv)
     cout << "File                   : " << params.filename << endl;
     cout << "Text Length            : " << result.text_length << endl;
     cout << "Sigma                  : " << result.sigma << endl;
-    cout << "Mean Time         (ms) : " <<
+    cout << "Mean Query Time   (ms) : " <<
          ((float)result.time/params.queries)/1e6 << endl;
     cout << "Total Seq Size (bytes) : " << result.seq_size << endl;
     cout << "RRR Table Size (bytes) : " << result.table_size << endl;
