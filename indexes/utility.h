@@ -79,7 +79,8 @@ namespace indexes
      * @param len Length in bits of each field
      * @param index Position to be retrieved
      */
-    inline uint get_field(const uint *A, const size_t len, const size_t index)
+    template < class Array_t >
+    inline uint get_field(const Array_t A, const size_t len, const size_t index)
     {
         if ( len==0 ) return 0;
         
@@ -103,7 +104,8 @@ namespace indexes
      * @param index Position to store in
      * @param x Value to be stored
      */
-    inline void set_field(uint *A, const size_t len,
+    template < class Array_t >
+    inline void set_field(Array_t A, const size_t len,
         const size_t index, const uint x)
     {
         if ( len == 0) return;
@@ -122,7 +124,8 @@ namespace indexes
      * @param ini Starting position
      * @param fin Retrieve until end-1
      */
-    inline uint get_var_field(const uint *A, const size_t ini, const size_t fin) {
+    template < class Array_t >
+    inline uint get_var_field(const Array_t A, const size_t ini, const size_t fin) {
         if (ini == fin+1)
             return 0;
         
@@ -150,7 +153,8 @@ namespace indexes
      * @param fin Store until end-1
      * @param x Value to be stored
      */
-    inline void set_var_field(uint *A, const size_t ini, const size_t fin,
+    template < class Array_t >
+    inline void set_var_field(Array_t A, const size_t ini, const size_t fin,
         const uint x)
     {
         if (ini == fin + 1) return;
