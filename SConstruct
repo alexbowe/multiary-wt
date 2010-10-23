@@ -4,7 +4,7 @@ import os
 # swithced to c++0x because of libcds
 BASE_FLAGS = '-std=c++0x -Wall -Wextra' # + ' -save-temps' # -ansi -pedantic
 DEBUG_FLAGS = BASE_FLAGS + ' -g'
-RELEASE_FLAGS = BASE_FLAGS + ' -DNDEBUG -O3 -pg'
+RELEASE_FLAGS = BASE_FLAGS + ' -DNDEBUG -O3' #-pg
 
 env = Environment(ENV=os.environ)
 Export('env')
