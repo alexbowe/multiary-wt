@@ -64,7 +64,7 @@ SimpleWaveletTree<T>::SimpleWaveletTree(const wt_sequence_t & sequence, size_typ
     myAssert(ARITY >= 2);
 
     // WT should always be balanced by definition
-    size_type numLevels = getNumSymbolsRequired(ALPHABET.length(), ARITY);
+    size_type numLevels = getNumSymbolsRequired(ALPHABET.length(), ARITY) + 1;
     size_type numNodes = getNumBalancedTreeNodes(numLevels, ARITY);
     
     encoding = encoding_heap_t(numNodes);
@@ -114,15 +114,17 @@ void SimpleWaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
     size_type left, size_type right, size_type nodeIdx = 0)
 {
     SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
-    // for our baseline this will be binary and stored in bitvectors...
-    sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
     
-    myAssert(nodeIdx < encoding.size());
-    
-    //encoding[nodeIdx] = rrr.build(mapped_sequence);
-    encoding[nodeIdx] = makeSimpleNode(mapped_sequence, ARITY);
-    seq_size += encoding[nodeIdx].num_blocks() *
-        sizeof(encoding_node_t::block_type) + sizeof(encoding_node_t);
+    {
+        sequence_t mapped_sequence = map_func<symbol_t>(enc, sequence);
+
+        myAssert(nodeIdx < encoding.size());
+
+        //encoding[nodeIdx] = rrr.build(mapped_sequence);
+        encoding[nodeIdx] = makeSimpleNode(mapped_sequence, ARITY);
+        seq_size += encoding[nodeIdx].num_blocks() *
+            sizeof(encoding_node_t::block_type) + sizeof(encoding_node_t);
+    }
     
     // If we have an alphabet of sigma = arity, we won't gain any more
     // information by encoding sub-levels... it is represented in the same
