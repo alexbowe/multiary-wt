@@ -1,7 +1,7 @@
 Multiary Wavelet Tree and RRR in C++
 ====================================
 
-v0.2
+v0.3
 
 Author: Alex Bowe
 
@@ -9,6 +9,7 @@ Email:  bowe.alexander@gmail.com
 
 Changes
 -------  
+ * Multi-01RRR has intermediate counts to improve speed
  * Compressed
  * Variant data structures
 
