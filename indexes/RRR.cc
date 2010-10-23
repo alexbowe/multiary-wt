@@ -142,13 +142,12 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     num_super_blocks = ceil(NUM_BLOCKS / (float) s_block_factor);
     //TRACE(( "[RRRSequence.CTOR] Num Super Blocks: %d\n", num_super_blocks ));
     
-    // Z = sym (arity)
-    // Y = super block (num_super_blocks)
-    // X = block (s_block_factor) - arranged this way for caching
-    // TODO: COMPRESS THIS and add it to size count
-    size_type inter_bits = getBitsRequired(s_block_factor * blocksize);
-    size_type inter_uints = getUintsRequired(inter_bits,
-        arity * num_super_blocks * s_block_factor);
+    // Y = sym (arity)
+    // X = super block (num_super_blocks)
+    size_type inter_bits = getBitsRequired(
+        s_block_factor * blocksize * num_super_blocks);
+    size_type inter_uints = getUintsRequired(inter_bits, 
+        arity * (num_super_blocks - 1));
     intermediates = inter_t(new uint[inter_uints]);
     
     _size += inter_uints * sizeof(int);
@@ -173,9 +172,20 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
         // Super block boundary:
         if (i > 0 && block_idx == 0)
         {
-            //TRACE(("RESETING\n"));
+            // update intermediate count
+            // Y = sym (arity)
+            // X = super block (num_super_blocks)
+            for (size_type sym = 0; sym < arity; sym++)
+            {
+                myAssert(super_block_idx > 0);
+                size_type intermediate_idx = get3DIdx(num_super_blocks,
+                    arity, super_block_idx - 1, sym, 0);
+                set_field(intermediates.get(), inter_bits, intermediate_idx,
+                    totals[sym]);
+            }
+            
             // reset running total
-            totals.assign(arity, 0);
+            // totals.assign(arity, 0);
         }
         
         // get last value in block, for each symbol
@@ -186,18 +196,6 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             
             // update running totals for super-block
             totals[sym] += rank;
-            size_type intermediate_idx = get3DIdx(s_block_factor,
-                num_super_blocks, block_idx, super_block_idx, sym);
-            /** Retrieve a given index from array A where every value uses len bits
-             * @param A Array
-             * @param len Length in bits of each field
-             * @param index Position to be retrieved
-             */
-            set_field(intermediates.get(), inter_bits, intermediate_idx,
-            totals[sym]);
-            //intermediates[intermediate_idx] = totals[sym];
-            //TRACE(("S%d b%d %d: %d\n", super_block_idx, block_idx, sym,
-            //    totals[sym]));
         }
     }
 
@@ -211,40 +209,35 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     size_type global_block_idx = pos / blocksize;
     size_type super_block_idx = global_block_idx / s_block_factor;
     size_type block_idx = global_block_idx % s_block_factor;
-    size_type inter_bits = getBitsRequired(s_block_factor * blocksize);
-    
-    //TRACE(("[RRRSequence.rank] Symbol Idx: %d\n", sym_idx));
-    //TRACE(("[RRRSequence.rank] Block: %d\n", block_idx));
-    //TRACE(("[RRRSequence.rank] Super Block: %d\n", super_block_idx));
+    size_type inter_bits = getBitsRequired(
+        s_block_factor * blocksize * num_super_blocks);
     
     size_type count = 0;
     
-    size_type inter_idx = 0;
-    for (size_type i = 0; i < super_block_idx; i++)
+    // get count from previous super blocks
+    if (super_block_idx > 0)
     {
-        //TRACE(("[RRRSequence.rank] i: %d\n", i));
-        // last block for every super block previous to this one
-        inter_idx = get3DIdx(s_block_factor, num_super_blocks,
-            s_block_factor - 1, i, sym);
+        size_type inter_idx = get3DIdx(num_super_blocks,
+            arity, super_block_idx - 1, sym, 0);
         count += get_field(intermediates.get(), inter_bits, inter_idx);
     }
-    //TRACE(("Count(1): %d\n", count));
 
-    // look up prev block pos
-    if (block_idx > 0)
+    size_type o_pos = 0;
+    size_type o_size = 0;
+    
+    // get previous block counts within this superblock
+    for (size_type i = 0; i < block_idx && i < s_block_factor; i++)
     {
-        //TRACE(("DOING SOMETHING DANGEROUS!\n"));
-        inter_idx = get3DIdx(s_block_factor, num_super_blocks,
-            block_idx - 1, super_block_idx, sym);
-        count += get_field(intermediates.get(), inter_bits, inter_idx);
+        size_type block_diff = block_idx - i;
+        size_type g_pre_block_i = global_block_idx - block_diff;
+        size_type classNum = get_field(classes.get(), BITS_PER_CLASS,
+            g_pre_block_idx);
+        
     }
-    //TRACE(("Count(2): %d\n", count));
     
     size_type classNum = get_field(classes.get(), BITS_PER_CLASS,
         global_block_idx);
     
-    size_type o_pos = 0;
-    size_type o_size = 0;
     // sample offsets
     for (size_type i = 0; i <= global_block_idx; i++)
     {
