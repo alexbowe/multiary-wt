@@ -146,13 +146,14 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     // Y = super block (num_super_blocks)
     // X = block (s_block_factor) - arranged this way for caching
     // TODO: COMPRESS THIS and add it to size count
-    intermediates = inter_t(new int[arity * num_super_blocks * s_block_factor]);
+    size_type inter_bits = getBitsRequired(s_block_factor * blocksize);
+    size_type inter_uints = getUintsRequired(inter_bits,
+        arity * num_super_blocks * s_block_factor);
+    intermediates = inter_t(new uint[inter_uints]);
     
-    //_size += (arity * num_super_blocks * s_block_factor) * sizeof(int);
+    _size += inter_uints * sizeof(int);
     _size += NUM_BLOCKS * ceil(BITS_PER_CLASS / sizeof(uint));
     _size += TOTAL_OFFSET_UINTS * sizeof(uint);
-    
-    // Populate intermediates table
     
     // declare running total vector
     vector<int> totals(arity, 0);
@@ -187,7 +188,14 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             totals[sym] += rank;
             size_type intermediate_idx = get3DIdx(s_block_factor,
                 num_super_blocks, block_idx, super_block_idx, sym);
-            intermediates[intermediate_idx] = totals[sym];
+            /** Retrieve a given index from array A where every value uses len bits
+             * @param A Array
+             * @param len Length in bits of each field
+             * @param index Position to be retrieved
+             */
+            set_field(intermediates.get(), inter_bits, intermediate_idx,
+            totals[sym]);
+            //intermediates[intermediate_idx] = totals[sym];
             //TRACE(("S%d b%d %d: %d\n", super_block_idx, block_idx, sym,
             //    totals[sym]));
         }
@@ -203,6 +211,7 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     size_type global_block_idx = pos / blocksize;
     size_type super_block_idx = global_block_idx / s_block_factor;
     size_type block_idx = global_block_idx % s_block_factor;
+    size_type inter_bits = getBitsRequired(s_block_factor * blocksize);
     
     //TRACE(("[RRRSequence.rank] Symbol Idx: %d\n", sym_idx));
     //TRACE(("[RRRSequence.rank] Block: %d\n", block_idx));
@@ -217,7 +226,7 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
         // last block for every super block previous to this one
         inter_idx = get3DIdx(s_block_factor, num_super_blocks,
             s_block_factor - 1, i, sym);
-        count += intermediates[inter_idx];
+        count += get_field(intermediates.get(), inter_bits, inter_idx);
     }
     //TRACE(("Count(1): %d\n", count));
 
@@ -227,7 +236,7 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
         //TRACE(("DOING SOMETHING DANGEROUS!\n"));
         inter_idx = get3DIdx(s_block_factor, num_super_blocks,
             block_idx - 1, super_block_idx, sym);
-        count += intermediates[inter_idx];
+        count += get_field(intermediates.get(), inter_bits, inter_idx);
     }
     //TRACE(("Count(2): %d\n", count));
     

@@ -22,7 +22,7 @@ private:
     // prefix sum (on bits) for offsets
     // boost::shared_array<int> prefix_sum;
     boost::shared_array<uint> offsets;
-    typedef boost::shared_array<int> inter_t;
+    typedef boost::shared_array<uint> inter_t;
     inter_t intermediates;
     
     size_type num_super_blocks;

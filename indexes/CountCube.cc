@@ -34,6 +34,7 @@ void CountCube::add(const sequence_t & block, size_type & classNum,
         size_type nOffsets = num_offsets(c, ARITY, BLOCK_SIZE);
         size_type bits = getBitsRequired(nOffsets);
         offset_size_table.push_back(bits);
+        _size += sizeof(bits);
     }
 
     offset = (*blockMappers[classNum])(block);
