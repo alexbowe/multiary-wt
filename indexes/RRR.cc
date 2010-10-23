@@ -174,9 +174,9 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
         // superblock i/s_block_factor
         size_type super_block_idx = i / s_block_factor;
         size_type block_idx  = i % s_block_factor;
-        const size_type classNum = get_field(classes.get(), BITS_PER_CLASS, i);
+        const size_type classNum = get_field(classes, BITS_PER_CLASS, i);
         const size_type offset_bits = cc.getNumOffsetBits(classNum);
-        const size_type offset = get_var_field(offsets.get(), offset_pos,
+        const size_type offset = get_var_field(offsets, offset_pos,
             offset_pos + offset_bits - 1);
         
         // Super block boundary:
@@ -184,7 +184,7 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
         {
             // update offset samples
             myAssert(super_block_idx > 0);
-            set_field(o_samples.get(), O_REF_BITS,
+            set_field(o_samples, O_REF_BITS,
                 super_block_idx - 1, offset_pos);
             
             // update intermediate count
@@ -194,7 +194,7 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             {
                 size_type intermediate_idx = sym * num_super_blocks +
                     super_block_idx - 1;
-                set_field(intermediates.get(), inter_bits, intermediate_idx,
+                set_field(intermediates, inter_bits, intermediate_idx,
                     totals[sym]);
             }
         }
@@ -240,16 +240,16 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     {
         o_pos = get_field(o_samples.get(), O_REF_BITS, super_block_idx - 1);
     }
-
+    
     // sample offsets
     size_type first_block = super_block_idx * s_block_factor;
     for (size_type i = first_block; i <= global_block_idx; i++)
     {
         size_type c = get_field(classes.get(), BITS_PER_CLASS, i);
         o_size = cc.getNumOffsetBits(c);
-        
         size_type offset = get_var_field(offsets.get(), o_pos,
             o_pos + o_size - 1);
+            
         size_type cc_count;
         if (i < global_block_idx)
             cc_count = cc.rank(c, offset, sym, blocksize-1);
