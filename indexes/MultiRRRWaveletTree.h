@@ -108,7 +108,7 @@ m_rrr_encoding_node_t makeMultiRRRNode(const basic_string<T> & seq, size_type ar
             size_type index = sym * length + pos;
             if ((unsigned int)seq[pos] == sym)
             {
-                counts[sym]++;
+                if (sym < arity - 1) counts[sym]++;
                 bitset(temp, index);
             }
         }
