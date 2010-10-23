@@ -195,10 +195,6 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             {
                 size_type intermediate_idx = sym * num_super_blocks +
                     super_block_idx - 1;
-                TRACE(("\n"));
-                TRACE(("SuperBlock:       %d\n", super_block_idx));
-                TRACE(("intermediate_idx: %d/%d\n",intermediate_idx,
-                    num_inter_samples));
                 myAssert(intermediate_idx < num_inter_samples);
                 myAssert(intermediate_idx < (num_super_blocks) * arity);
                 set_field(intermediates, inter_bits, intermediate_idx,
