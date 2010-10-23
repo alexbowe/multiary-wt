@@ -120,7 +120,7 @@ RRRSequence RRR::build(const sequence_t & seq)
     
     return RRRSequence(classesShrunk, offsetsShrunk, offsets.size(),
         ARITY, BLOCK_SIZE, SUPER_BLOCK_FACTOR, bitsPerClass, offsetUints,
-        countCube);
+        offset_bits_total, countCube);
 }
 
 RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
@@ -129,12 +129,13 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
     const size_type arity,
     const size_type blocksize, const size_type s_block_factor,
     const size_type bitsPerClass,
-    const size_type TOTAL_OFFSET_UINTS, const CountCube & cc) :
+    const size_type TOTAL_OFFSET_UINTS,
+    const size_type TOTAL_OFFSET_BITS, const CountCube & cc) :
     // these will have to be constructed in smarter ways :)
     // like, store a number to say how many bit are required for the classes?
     // and packing the offsets
     _size(0), classes(classes_in), offsets(offsets_in),
-    BITS_PER_CLASS(bitsPerClass)
+    BITS_PER_CLASS(bitsPerClass), O_REF_BITS(getBitsRequired(TOTAL_OFFSET_BITS))
 {
     // these really must be the same length...
     // myAssert(classes.size() == offsets.size());
@@ -150,7 +151,16 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
         arity * (num_super_blocks - 1));
     intermediates = inter_t(new uint[inter_uints]);
     
-    _size += inter_uints * sizeof(int);
+    // O_SAMPLES: fixed-width array for pre-computed positions for offsets
+    // at super block boundary
+    // how many bits required to point to every possible offset
+    // in the offset array?
+    size_type num_o_samples = (num_super_blocks - 1); // dont need for SB0
+    size_type num_o_uints = getUintsRequired(O_REF_BITS, num_o_samples);
+    o_samples = inter_t(new uint[num_o_uints]);
+    
+    _size += num_o_uints * sizeof(uint);
+    _size += inter_uints * sizeof(uint);
     _size += NUM_BLOCKS * ceil(BITS_PER_CLASS / sizeof(uint));
     _size += TOTAL_OFFSET_UINTS * sizeof(uint);
     
@@ -167,11 +177,16 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
         const size_type offset_bits = cc.getNumOffsetBits(classNum);
         const size_type offset = get_var_field(offsets.get(), offset_pos,
             offset_pos + offset_bits - 1);
-        offset_pos += offset_bits;
+        
         
         // Super block boundary:
         if (i > 0 && block_idx == 0)
         {
+            // update offset samples
+            myAssert(super_block_idx > 0);
+            set_field(o_samples.get(), O_REF_BITS,
+                super_block_idx - 1, offset_pos);
+            
             // update intermediate count
             // Y = sym (arity)
             // X = super block (num_super_blocks)
@@ -183,10 +198,9 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
                 set_field(intermediates.get(), inter_bits, intermediate_idx,
                     totals[sym]);
             }
-            
-            // reset running total
-            // totals.assign(arity, 0);
         }
+        
+        offset_pos += offset_bits;
         
         // get last value in block, for each symbol
         for (size_type sym = 0; sym < arity; sym++)
@@ -198,7 +212,6 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             totals[sym] += rank;
         }
     }
-
 }
 
 size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
@@ -238,8 +251,16 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     size_type classNum = get_field(classes.get(), BITS_PER_CLASS,
         global_block_idx);
     
+    size_type o_pos = 0;
+    if (super_block_idx > 0)
+    {
+        o_pos = get_field(o_samples.get(), O_REF_BITS, super_block_idx - 1);
+    }
+    size_type o_size = 0;
+
     // sample offsets
-    for (size_type i = 0; i <= global_block_idx; i++)
+    size_type first_block = super_block_idx * s_block_factor;
+    for (size_type i = first_block; i <= global_block_idx; i++)
     {
         size_type c = get_field(classes.get(), BITS_PER_CLASS, i);
         o_size = cc.getNumOffsetBits(c);
