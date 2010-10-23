@@ -3,10 +3,22 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
-#include "indexes/WaveletTree.h"
+
 #include "tclap/CmdLine.h"
-#include "indexes/debug.h"
 #include "nanotime_wrapper/nanotime_wrapper.h"
+
+#include "indexes/debug.h"
+#include "indexes/WaveletTree.h"
+#include "indexes/SimpleWaveletTree.h"
+#include "indexes/MultiRRRWaveletTree.h"
+
+// LIBCDS
+#include "WaveletTree.h"
+#include "Sequence.h"
+#include "Mapper.h"
+#include "BitSequenceBuilder.h"
+#define DEFAULT_SAMPLING 32
+namespace cds = cds_static;
 
 using namespace std;
 using namespace indexes;
@@ -31,11 +43,22 @@ public:
     inline Query<T> next()
     {
         size_t pos = rand() % TEXT_LENGTH;
-        T sym = ALPHABET[rand()%ALPHABET.length()];
+        T sym = ALPHABET[rand() % ALPHABET.length()];
         Query<T> q = {pos, sym};
         return q;
     }
 };
+
+typedef struct p
+{
+    bool intSwitch;
+    unsigned int queries;
+    unsigned int arity;
+    unsigned int blocksize;
+    unsigned int sbsize;
+    unsigned int structure;
+    std::string filename;
+} params_t;
 
 template <class T>
 QueryGenerator<T>::QueryGenerator(size_t text_length,
@@ -49,17 +72,14 @@ QueryGenerator<T>::QueryGenerator(size_t text_length,
 static const size_t DEFAULT_QUERIES = 1e3;
 static const size_t DEFAULT_ARITY = 2;
 static const size_t DEFAULT_BLOCKSIZE = 15;
-static const size_t DEFAULT_SBSIZE = 6;
+static const size_t DEFAULT_SBSIZE = 32;
 
-typedef struct p
-{
-    bool intSwitch;
-    unsigned int queries;
-    unsigned int arity;
-    unsigned int blocksize;
-    unsigned int sbsize;
-    std::string filename;
-} params_t;
+enum structure { AB_RRR, FC_RRR, SIMPLE, N_01RRR };
+static const string STRUCTURE_STRINGS[] = { "ab-rrr",
+                                            "fc-rrr",
+                                            "simple",
+                                            "n-01rrr" };
+static const int DEFAULT_STRUCTURE = AB_RRR;
 
 void parseArgs(int argc, char **argv, params_t & params)
 {
@@ -91,6 +111,10 @@ void parseArgs(int argc, char **argv, params_t & params)
             "how many blocks are in a super block for RRR", false,
             DEFAULT_SBSIZE, "positive integer >= 1", cmd);
         
+        TCLAP::ValueArg<int> structureArg("t", "type",
+            "Data structure type to test", false, DEFAULT_STRUCTURE,
+            "Int between 0 and 3", cmd);
+        
         cmd.parse( argc, argv );
         
         // Get the value parsed by each arg. 
@@ -100,10 +124,21 @@ void parseArgs(int argc, char **argv, params_t & params)
         params.arity = arityArg.getValue();
         params.blocksize = blocksizeArg.getValue();
         params.sbsize = sbsizeArg.getValue();
+        params.structure = structureArg.getValue();
         
         if (params.filename == "")
         {
             std::cerr << "Please specify a file..." << std::endl;
+            exit(1);
+        }
+        
+        if (params.structure >= 4)
+        {
+            std::cerr << "Please specify a structure as such:" << std::endl;
+            std::cerr << "\tab-rrr  : 0" << endl;
+            std::cerr << "\tfc-rrr  : 1" << endl;
+            std::cerr << "\tsimple  : 2" << endl;
+            std::cerr << "\tn-01rrr : 3" << endl;
             exit(1);
         }
     }
@@ -150,25 +185,22 @@ typedef struct stats
     size_t table_size;
     size_t seq_size;
     size_t wt_size;
+    stats() : time(0), text_length(0), sigma(0), table_size(0), seq_size(0),
+        wt_size(0) {}
 } stats_t;
 
-template <class T>
-stats_t doStuff(params_t & params)
+inline unsigned int * unsignedCast(int * p)
+{ return (unsigned int*) p; }
+
+inline unsigned char * unsignedCast(char * p)
+{ return (unsigned char*) p; }
+
+template <class T, class WT>
+stats_t timeQuery(WT & wt, basic_string<T> & alpha,
+    params_t & params, stats_t & result)
 {
-    stats_t result;
-    
-    // Clear input buffer after creating WT
-    basic_string<T> input = readFile<T>(params.filename.c_str());
-    result.text_length = input.length();
-    
-    cerr << "Building Wavelet Tree..." << endl;
-    WaveletTree<T> wt(input, params.arity, params.blocksize, params.sbsize);
-    cerr << "Done!" << endl;
-    
-    result.sigma = wt.getAlpha().length();
-    
     cerr << "Generating " << params.queries << " Queries..." << endl;
-    QueryGenerator<T> qgen(input.length(), wt.getAlpha());
+    QueryGenerator<T> qgen(result.text_length, alpha);
     
     vector< Query<T> > queries(params.queries);
     for (unsigned int i = 0; i < params.queries; i++)
@@ -178,8 +210,16 @@ stats_t doStuff(params_t & params)
     
     cerr << "Running Queries..." << endl;
     nanotime_t t0 = get_nanotime();
+    
+    size_t r;
     for (unsigned int i = 0; i < params.queries; i++)
-        wt.rank(queries[i].symbol, queries[i].position);
+    {
+        if (params.structure == FC_RRR)
+            r = wt.rank(queries[i].symbol, queries[i].position);
+        else
+            r = wt.rank(queries[i].symbol, queries[i].position);
+    }
+        
     nanotime_t t1 = get_nanotime();
     cerr << "Done!" << endl;
     
@@ -188,12 +228,111 @@ stats_t doStuff(params_t & params)
     return result;
 }
 
+template <class T>
+stats_t doStuff(params_t & params)
+{
+    stats_t result;
+    basic_string<T> alpha;
+    
+    cerr << "Structure: " << STRUCTURE_STRINGS[params.structure] << endl;
+    
+    // Clear input buffer after creating WT
+    basic_string<T> input = readFile<T>(params.filename.c_str());
+
+     // libcds doesnt provide alphabet accessor
+    if(params.structure == FC_RRR)
+    {
+        alpha = getAlphabet(input);
+        result.sigma = alpha.length();
+    }
+    
+    result.text_length = input.length();
+    
+    cerr << "Building Wavelet Tree..." << endl;
+    
+    if (params.structure == FC_RRR)
+    {
+        T * input_ptr = const_cast<T*>(input.c_str());
+        cds::MapperNone * map;
+        cds::wt_coder_binary * wc;
+        cds::BitSequenceBuilderRRR * bsb;
+        cds::Sequence * wt;
+        // Adapted from Claude's example: http://libcds.recoded.cl/node/9
+        map = new cds::MapperNone();
+        wc = new cds::wt_coder_binary(unsignedCast(input_ptr), 
+            result.text_length, map);
+        // Default sampling taken from RRR code...
+        bsb = new cds::BitSequenceBuilderRRR(DEFAULT_SAMPLING);
+        wt = new cds::WaveletTree(unsignedCast(input_ptr),
+            result.text_length, wc, bsb, map);
+        cerr << "Done!" << endl;
+        
+        // "we consider E to be free (64K shared among all the RRR02 bitmaps)"
+        result.table_size = 64 * 1024;
+        result.seq_size = bsb->getSize();
+        result.wt_size = wt->getSize();
+        
+        result = timeQuery(*wt, alpha, params, result);
+        
+        delete wc;
+    }
+    else
+    {
+        if ( params.structure == AB_RRR )
+        {
+            WaveletTree<T> wt(input, params.arity,
+                params.blocksize, params.sbsize);
+            alpha = wt.getAlpha();
+            result.sigma = alpha.length();
+            cerr << "Done!" << endl;
+            
+            result.table_size = wt.rrrSize();
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
+
+            result = timeQuery(wt, alpha, params, result);
+        }
+        else if ( params.structure == SIMPLE )
+        {
+            SimpleWaveletTree<T> wt(input, params.arity);
+            alpha = wt.getAlpha();
+            result.sigma = alpha.length();
+            cerr << "Done!" << endl;
+            
+            result.table_size = 0;
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
+            
+            result = timeQuery(wt, alpha, params, result);
+        }
+        else if ( params.structure == N_01RRR )
+        {
+            MultiRRRWaveletTree<T> wt(input, params.arity);
+            alpha = wt.getAlpha();
+            result.sigma = alpha.length();
+            cerr << "Done!" << endl;
+            
+            // "we consider E to be free
+            // (64K shared among all the RRR02 bitmaps)"
+            result.table_size = 64 * 1024;
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
+            
+            result = timeQuery(wt, alpha, params, result);
+        }
+        
+    }
+    
+    return result;
+}
+
 int main(int argc, char **argv)
 {
     // Get the value parsed by each arg. 
     params_t params;
-    
+
     parseArgs(argc, argv, params);
+    cerr << "Parsed arguments OK" << endl;
     
     stats_t result;
     
@@ -204,35 +343,13 @@ int main(int argc, char **argv)
     else
         result = doStuff<char>(params);
     
-    cout << "Sigma            : " << result.sigma << endl;
-    cout << "Mean Time   (ms) : " << ((float)result.time/params.queries)/1e6
-         << endl;
-    cout << "Seq Size (bytes) : " << endl;
-    cout << "RRR Size (bytes) : " << endl;
-    cout << "WT Size  (bytes) : " << endl;
+    cout << "Text Length            : " << result.text_length << endl;
+    cout << "Sigma                  : " << result.sigma << endl;
+    cout << "Mean Time         (ms) : " <<
+         ((float)result.time/params.queries)/1e6 << endl;
+    cout << "Total Seq Size (bytes) : " << result.seq_size << endl;
+    cout << "RRR Table Size (bytes) : " << result.table_size << endl;
+    cout << "WT Size        (bytes) : " << result.wt_size << endl;
     
     return 0;
 }
-
-/*
-
-
-
-//basic_string<char> alpha = wt.getAlpha();
-//cerr << "ALPHABET: " << alpha << endl;
-
-QueryGenerator<char> qgen(input.length(), wt.getAlpha());
-
-flushis(cin);
-
-int numQueries = 1e3; // a thousand queries
-typedef struct query_struct<char> query;
-vector<query> queries = vector<query>(numQueries);
-for (int i = 0; i < numQueries; i++)
-    queries[i] = qgen.next();
-
-cerr << "querying..." << endl;
-for (int i = 0; i < numQueries; i++)
-    wt.rank(queries[i].symbol, queries[i].position);
-cerr << "done" << endl;
-*/

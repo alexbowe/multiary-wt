@@ -1,16 +1,25 @@
 Multiary Wavelet Tree and RRR in C++
 ====================================
 
-v0.1.5
+v0.2
 
 Author: Alex Bowe
 
 Email:  bowe.alexander@gmail.com
 
+Changes
+-------  
+ * Compressed
+ * Variant data structures
+
+Plans
+-----   
+ * Reduce WT construction memory (stop using strings, maybe do breadth-first
+   traversal)
+ * Pre-generate CountCube
 
 Obtaining and Contributing
---------------------------
-
+--------------------------  
 To clone this repository:
 
 	$ git clone http://github.com/alexbowe/multiary-wt.git
@@ -21,8 +30,7 @@ If you want to contribute, please fork the project and submit a pull request. If
 
 
 Building With SCons Installed
------------------------------
-
+-----------------------------  
 To build, in your shell, type:
 	
 	$ scons
@@ -39,8 +47,7 @@ To clean up:
 
 
 Dependencies
-------------
-
+------------  
 These dependencies ARE NOT provided:
 
  * [Python](http://www.python.org) for build system only
@@ -51,12 +58,10 @@ These dependencies ARE NOT provided:
 
 
 License
--------
-
+-------  
  * All of my work is licensed under the [Creative Commons Attribution-Share Alike 3.0 license](http://creativecommons.org/licenses/by-sa/3.0/)
 
 
 Shout Outs
-----------
-
+----------  
 Special thanks to Simon Puglisi, Juha Kärkkäinen, and Nikolas Bowe for their guidance.
