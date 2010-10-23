@@ -70,7 +70,7 @@ WaveletTree<T>::WaveletTree(const wt_sequence_t & sequence, size_type arity,
     myAssert(ARITY >= 2);
 
     // WT should always be balanced by definition
-    size_type numLevels = getNumSymbolsRequired(ALPHABET.length(), ARITY);
+    size_type numLevels = getNumSymbolsRequired(ALPHABET.length(), ARITY) + 1;
     size_type numNodes = getNumBalancedTreeNodes(numLevels, ARITY);
     
     encoding = encoding_heap_t(numNodes);
