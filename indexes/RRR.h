@@ -21,7 +21,7 @@ private:
     boost::shared_array<uint> classes;
     // prefix sum (on bits) for offsets
     // boost::shared_array<int> prefix_sum;
-    vector<int> offsets;
+    boost::shared_array<uint> offsets;
     typedef boost::shared_array<int> inter_t;
     inter_t intermediates;
     
@@ -29,10 +29,13 @@ private:
     size_type BITS_PER_CLASS;
     
     RRRSequence(const boost::shared_array<uint> & classes_in,
-        const vector<int> & offsets_in,
+        const boost::shared_array<uint> & offsets_in,
+        const size_type NUM_BLOCKS,
         const size_type arity, const size_type blocksize,
         const size_type s_block_factor,
-        const size_type BITS_PER_CLASS, const CountCube & cc);
+        const size_type BITS_PER_CLASS,
+        const size_type TOTAL_OFFSET_UINTS,
+        const CountCube & cc);
         
     size_type rank(symbol_t sym, size_type pos, size_type blocksize,
         size_type s_block_factor,

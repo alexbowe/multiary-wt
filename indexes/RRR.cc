@@ -27,6 +27,7 @@ RRR::RRR(size_type arity, size_type block_size, size_type s_block_factor) :
 /** Builds RRR Sequence from input vector. */
 RRRSequence RRR::build(const sequence_t & seq)
 {
+    TRACE(("A\n"));
     size_type maxClass = 0;
     size_type classNum, offset;
     sequence_t block(BLOCK_SIZE, PAD_VALUE);
@@ -37,10 +38,13 @@ RRRSequence RRR::build(const sequence_t & seq)
         boost::shared_array<uint>(new uint[numUints]);
     vector<int> offsets = vector<int>(numBlocks);
     
+    TRACE(("B\n"));
     // loop over in multiples of BLOCK_SIZE (padded with zeros)
     size_type block_ind = 0;
     size_type block_ind_total = 0;
     sequence_t::const_iterator it;
+    
+    size_type offset_bits_total = 0;
     
     // shouldn't be calling with an empty sequence
     myAssert(seq.begin() != seq.end());
@@ -55,6 +59,9 @@ RRRSequence RRR::build(const sequence_t & seq)
         {
             // insert block into CountCube
             countCube.add(block, classNum, offset);
+            size_type bits = countCube.getNumOffsetBits(classNum);
+            offset_bits_total += bits;
+            myAssert(bits > 0);
             
             if (classNum > maxClass) maxClass = classNum;
             
@@ -70,29 +77,50 @@ RRRSequence RRR::build(const sequence_t & seq)
         }
     }
     
+    TRACE(("C\n"));
     // Should have filled the whole thing up...
     myAssert(block_ind_total == numBlocks);
     
     size_type bitsPerClass = getBitsRequired(maxClass);
     
-    // shrink class array
-    boost::shared_array<uint> classesShrunk =
+    // shrink class array and offsets
+    size_type o_pos = 0;
+    size_type offsetUints = getUintsRequired(offset_bits_total, 1);
+    TRACE(("Offset Bits Total: %d\n", offset_bits_total));
+    TRACE(("OffsetUINTS: %d\n", offsetUints));
+    boost::shared_array<uint> offsetsShrunk = 
+        boost::shared_array<uint>(new uint[offsetUints]);
+    boost::shared_array<uint> classesShrunk = 
         boost::shared_array<uint>(new uint[numBlocks * bitsPerClass]);
+        
     for (size_type i = 0; i < numBlocks; i++)
     {
-        size_type c = get_field(classes.get(), MAX_BITS_PER_CLASS,
-            i);
+        // shrink class
+        size_type c = get_field(classes.get(), MAX_BITS_PER_CLASS, i);
         set_field(classesShrunk.get(), bitsPerClass, i, c);
+        
+        // shrink offset
+        size_type o_bits = countCube.getNumOffsetBits(c);
+        TRACE(("[%d, %d): %d\n", o_pos, o_bits, offsets[i]));
+        set_var_field(offsetsShrunk.get(), o_pos, o_pos + o_bits, offsets[i]);
+        myAssert((unsigned long)offsets[i] == 
+            get_var_field(offsetsShrunk.get(), o_pos, o_pos + o_bits));
+        myAssert(o_pos < offset_bits_total);
+        o_pos += o_bits;
     }
     
-    return RRRSequence(classesShrunk, offsets, ARITY, BLOCK_SIZE,
-            SUPER_BLOCK_FACTOR, bitsPerClass, countCube);
+    return RRRSequence(classesShrunk, offsetsShrunk, offsets.size(),
+        ARITY, BLOCK_SIZE, SUPER_BLOCK_FACTOR, bitsPerClass, offsetUints,
+        countCube);
 }
 
 RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
-    const vector<int> & offsets_in, const size_type arity,
+    const boost::shared_array<uint> & offsets_in,
+    const size_type NUM_BLOCKS,
+    const size_type arity,
     const size_type blocksize, const size_type s_block_factor,
-    const size_type bitsPerClass, const CountCube & cc) :
+    const size_type bitsPerClass,
+    const size_type TOTAL_OFFSET_UINTS, const CountCube & cc) :
     // these will have to be constructed in smarter ways :)
     // like, store a number to say how many bit are required for the classes?
     // and packing the offsets
@@ -101,35 +129,41 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
 {
     // these really must be the same length...
     // myAssert(classes.size() == offsets.size());
-    
-    const unsigned int NUM_BLOCKS(offsets.size());
+    TRACE(("RRRSequence.CTOR\n"));
+    //const unsigned int NUM_BLOCKS(offsets.size());
     num_super_blocks = ceil(NUM_BLOCKS / (float) s_block_factor);
     //TRACE(( "[RRRSequence.CTOR] Num Super Blocks: %d\n", num_super_blocks ));
     
     // Z = sym (arity)
     // Y = super block (num_super_blocks)
     // X = block (s_block_factor) - arranged this way for caching
-    // TODO: COMPRESS THIS
+    // TODO: COMPRESS THIS and add it to size count
     intermediates = inter_t(new int[arity * num_super_blocks * s_block_factor]);
     
     //_size += (arity * num_super_blocks * s_block_factor) * sizeof(int);
-    _size += NUM_BLOCKS * ceil(BITS_PER_CLASS / sizeof(int));
-    // TODO: UPDATE FOR OFFSETS WHEN YOU COMPRESS THEM
-    //size += NUM_BLOCKS * 
+    _size += NUM_BLOCKS * ceil(BITS_PER_CLASS / sizeof(uint));
+    _size += TOTAL_OFFSET_UINTS * sizeof(uint);
     
     // Populate intermediates table
     
     // declare running total vector
     vector<int> totals(arity, 0);
     // for each (C, O) at i:
+    size_type offset_pos = 0;
     for (size_type i = 0; i < NUM_BLOCKS; i++)
     {
+        TRACE(("XA\n"));
         // superblock i/s_block_factor
         size_type super_block_idx = i / s_block_factor;
         size_type block_idx  = i % s_block_factor;
         size_type classNum = get_field(classes.get(), BITS_PER_CLASS, i);
-        size_type offset = offsets[i];
+        size_type offset_size = cc.getNumOffsetBits(classNum);
+        size_type offset = get_var_field(offsets.get(), offset_pos,
+            offset_pos + offset_size);
+        TRACE(("Offset: %d\n", offset));
+        offset_pos += offset_size;
         
+        TRACE(("XB\n"));
         // Super block boundary:
         if (i > 0 && block_idx == 0)
         {
@@ -138,6 +172,7 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             totals.assign(arity, 0);
         }
         
+        TRACE(("XC\n"));
         // get last value in block, for each symbol
         for (size_type sym = 0; sym < arity; sym++)
         {
@@ -153,6 +188,7 @@ RRRSequence::RRRSequence(const boost::shared_array<uint> & classes_in,
             //    totals[sym]));
         }
     }
+    TRACE(("Z\n"));
 }
 
 size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
@@ -169,7 +205,7 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
     //TRACE(("[RRRSequence.rank] Super Block: %d\n", super_block_idx));
     
     size_type count = 0;
-    
+    TRACE(("A\n"));
     size_type inter_idx = 0;
     for (size_type i = 0; i < super_block_idx; i++)
     {
@@ -180,7 +216,7 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
         count += intermediates[inter_idx];
     }
     //TRACE(("Count(1): %d\n", count));
-    
+    TRACE(("B\n"));
     // look up prev block pos
     if (block_idx > 0)
     {
@@ -190,11 +226,24 @@ size_type RRRSequence::rank(symbol_t sym, size_type pos, size_type blocksize,
         count += intermediates[inter_idx];
     }
     //TRACE(("Count(2): %d\n", count));
-    
+    TRACE(("C\n"));
     size_type classNum = get_field(classes.get(), BITS_PER_CLASS,
         global_block_idx);
-    size_type cc_count = cc.rank(classNum,
-        offsets[global_block_idx], sym, sym_idx);
+    
+    TRACE(("D\n"));
+    size_type o_pos = 0;
+    size_type o_size = 0;
+    // sample offsets
+    for (size_type i = 0; i < global_block_idx; i++)
+    {
+        size_type c = get_field(classes.get(), BITS_PER_CLASS, i);
+        o_size = cc.getNumOffsetBits(c);
+        o_pos += o_size;
+    }
+    TRACE(("E\n"));
+    size_type offset = get_var_field(offsets.get(), o_pos,
+        o_pos + o_size);
+    size_type cc_count = cc.rank(classNum, offset, sym, sym_idx);
     //TRACE(("FROM CC: %d\n", cc_count));
     // look up current block pos using CountCube
     count += cc_count;
