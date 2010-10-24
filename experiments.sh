@@ -6,17 +6,17 @@ OUTPUT_DIR=results
 SWIT_EXT=.swit.bwt
 TEXT_EXT=MB.bwt
 RUNS=3
-MAX_ARITY=8 # 16
+MAX_ARITY=16 # 16
 STRUCTS=('ab-rrr' 'fc-rrr' 'simple' 'multi-01rrr')
 
 #attempt to recompile, ensure we aren't using debug=1
 scons debug=0
 
-for t in {0..3}
+for t in {2..3}
 do
     struct=${STRUCTS[$t]}
 
-    for (( arity=2; arity<=MAX_ARITY; arity*=2 ))
+    for (( arity=16; arity<=MAX_ARITY; arity*=2 ))
     do
         mkdir -p $OUTPUT_DIR/$struct/arity$arity/
         
@@ -28,9 +28,9 @@ do
             
             for (( i=1; i<=RUNS; i++ ))
             do
-                echo $struct - $file - RUN NUMBER $i...
+                echo $struct - $file - arity: $arity - RUN NUMBER $i...
                 touch $OUT_FILE.$i
-                $RUN -f $file -a $arity >> $OUT_FILE.$i
+                $RUN -f $file -a $arity -t $t >> $OUT_FILE.$i
             done
         done
 
@@ -41,8 +41,9 @@ do
             OUT_FILE=$OUTPUT_DIR/$struct/arity$arity/$OUT_FILE
             for (( i=1; i<=RUNS; i++ ))
             do
+                echo $struct - $file - arity: $arity - RUN NUMBER $i...
                 touch $OUT_FILE.$i
-                $RUN -f $file -a $arity -i >> $OUT_FILE.$i
+                $RUN -f $file -a $arity -i -t $t >> $OUT_FILE.$i
             done
         done
         
