@@ -12,12 +12,16 @@ STRUCTS=('ab-rrr' 'fc-rrr' 'simple' 'multi-01rrr')
 #attempt to recompile, ensure we aren't using debug=1
 scons debug=0
 
-for t in {2..3}
+for t in {0..0}
 do
     struct=${STRUCTS[$t]}
 
-    for (( arity=16; arity<=MAX_ARITY; arity*=2 ))
+    for (( arity=2; arity<=MAX_ARITY; arity*=2 ))
     do
+        # don't want to test at arity 16 for my rrr, as it uses too much mem
+        if [ $t = 0 ] && [ $arity = $MAX_ARITY ]; then
+            break
+        fi
         mkdir -p $OUTPUT_DIR/$struct/arity$arity/
         
         # Ascii files
