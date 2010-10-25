@@ -6,13 +6,13 @@ OUTPUT_DIR=results
 SWIT_EXT=.swit.bwt
 TEXT_EXT=MB.bwt
 RUNS=3
-MAX_ARITY=16 # 16
-STRUCTS=('ab-rrr' 'fc-rrr' 'simple' 'multi-01rrr')
+MAX_ARITY=16 # only goes up to 8 for my RRR
+STRUCTS=('ab-rrr' 'fc-rrr' 'simple' 'multi-01rrr', 'multi-sdarray')
 
 #attempt to recompile, ensure we aren't using debug=1
 scons debug=0
 
-for t in {0..0}
+for t in {0..4}
 do
     struct=${STRUCTS[$t]}
 
