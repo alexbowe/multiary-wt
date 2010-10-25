@@ -58,6 +58,8 @@ public:
         return seq_size; }
     inline size_type rrrSize() { return rrr.size(); }
     inline size_type numNodes() { return encoding.size(); }
+    inline size_type getNumClasses() {return rrr.getNumClasses(); }
+    inline size_type getNumOffsets() {return rrr.getNumOffsets(); }
 };
 
 template <class T>

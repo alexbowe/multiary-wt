@@ -11,6 +11,7 @@
 #include "indexes/WaveletTree.h"
 #include "indexes/SimpleWaveletTree.h"
 #include "indexes/MultiRRRWaveletTree.h"
+#include "indexes/MultiSDWaveletTree.h"
 
 // LIBCDS
 #include "WaveletTree.h"
@@ -74,11 +75,12 @@ static const size_t DEFAULT_ARITY = 2;
 static const size_t DEFAULT_BLOCKSIZE = 15;
 static const size_t DEFAULT_SBSIZE = 32;
 
-enum structure { AB_RRR, FC_RRR, SIMPLE, N_01RRR };
+enum structure { AB_RRR, FC_RRR, SIMPLE, N_01RRR, N_SD };
 static const string STRUCTURE_STRINGS[] = { "ab-rrr",
                                             "fc-rrr",
                                             "simple",
-                                            "n-01rrr" };
+                                            "n-01rrr",
+                                            "n-sd" };
 static const int DEFAULT_STRUCTURE = AB_RRR;
 
 void parseArgs(int argc, char **argv, params_t & params)
@@ -113,7 +115,7 @@ void parseArgs(int argc, char **argv, params_t & params)
         
         TCLAP::ValueArg<int> structureArg("t", "type",
             "Data structure type to test", false, DEFAULT_STRUCTURE,
-            "Int between 0 and 3", cmd);
+            "Int between 0 and 4", cmd);
         
         cmd.parse( argc, argv );
         
@@ -132,13 +134,14 @@ void parseArgs(int argc, char **argv, params_t & params)
             exit(1);
         }
         
-        if (params.structure >= 4)
+        if (params.structure >= 5)
         {
             std::cerr << "Please specify a structure as such:" << std::endl;
             std::cerr << "\tab-rrr  : 0" << endl;
             std::cerr << "\tfc-rrr  : 1" << endl;
             std::cerr << "\tsimple  : 2" << endl;
             std::cerr << "\tn-01rrr : 3" << endl;
+            std::cerr << "\tn-sd    : 4" << endl;
             exit(1);
         }
     }
@@ -185,8 +188,10 @@ typedef struct stats
     size_t table_size;
     size_t seq_size;
     size_t wt_size;
+    size_t num_classes;
+    size_t num_offsets;
     stats() : time(0), text_length(0), sigma(0), table_size(0), seq_size(0),
-        wt_size(0) {}
+        wt_size(0), num_classes(0), num_offsets(0) {}
 } stats_t;
 
 inline unsigned int * unsignedCast(int * p)
@@ -289,6 +294,8 @@ stats_t doStuff(params_t & params)
             result.table_size = wt.rrrSize();
             result.seq_size = wt.seqSize();
             result.wt_size = wt.size();
+            result.num_classes = wt.getNumClasses();
+            result.num_offsets = wt.getNumOffsets();
 
             result = timeQuery(wt, alpha, params, result);
         }
@@ -321,6 +328,21 @@ stats_t doStuff(params_t & params)
             result = timeQuery(wt, alpha, params, result);
         }
         
+        else if ( params.structure == N_SD )
+        {
+            MultiSDWaveletTree<T> wt(input, params.arity);
+            alpha = wt.getAlpha();
+            result.sigma = alpha.length();
+            cerr << "Done!" << endl;
+            
+            // "we consider E to be free
+            // (64K shared among all the RRR02 bitmaps)"
+            result.table_size = 0;
+            result.seq_size = wt.seqSize();
+            result.wt_size = wt.size();
+            
+            result = timeQuery(wt, alpha, params, result);
+        }
     }
     
     return result;
@@ -356,6 +378,12 @@ int main(int argc, char **argv)
     cout << "Total Seq Size (bytes) : " << result.seq_size << endl;
     cout << "RRR Table Size (bytes) : " << result.table_size << endl;
     cout << "WT Size        (bytes) : " << result.wt_size << endl;
+    
+    if ( params.structure == AB_RRR )
+    {
+        cout << "Unique Classes         : " << result.num_classes << endl;
+        cout << "Unique Offsets         : " << result.num_offsets << endl;
+    }
     
     return 0;
 }
