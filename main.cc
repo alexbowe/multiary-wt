@@ -185,8 +185,10 @@ typedef struct stats
     size_t table_size;
     size_t seq_size;
     size_t wt_size;
+    size_t num_classes;
+    size_t num_offsets;
     stats() : time(0), text_length(0), sigma(0), table_size(0), seq_size(0),
-        wt_size(0) {}
+        wt_size(0), num_classes(0), num_offsets(0) {}
 } stats_t;
 
 inline unsigned int * unsignedCast(int * p)
@@ -289,6 +291,8 @@ stats_t doStuff(params_t & params)
             result.table_size = wt.rrrSize();
             result.seq_size = wt.seqSize();
             result.wt_size = wt.size();
+            result.num_classes = wt.getNumClasses();
+            result.num_offsets = wt.getNumOffsets();
 
             result = timeQuery(wt, alpha, params, result);
         }
@@ -356,6 +360,12 @@ int main(int argc, char **argv)
     cout << "Total Seq Size (bytes) : " << result.seq_size << endl;
     cout << "RRR Table Size (bytes) : " << result.table_size << endl;
     cout << "WT Size        (bytes) : " << result.wt_size << endl;
+    
+    if ( params.structure == AB_RRR )
+    {
+        cout << "Unique Classes         : " << result.num_classes << endl;
+        cout << "Unique Offsets         : " << result.num_offsets << endl;
+    }
     
     return 0;
 }

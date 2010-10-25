@@ -6,7 +6,8 @@ using namespace boost;
 using namespace indexes;
 
 CountCube::CountCube(size_type arity, size_type blocksize) : ARITY(arity),
-    BLOCK_SIZE(blocksize), _size(0), class_table(), offset_size_table()
+    BLOCK_SIZE(blocksize), _size(0), numClasses(0), numOffsets(0),
+    class_table(), offset_size_table()
 {
     classMapper = Mapper_ptr(new Mapper());
     blockMappers = vector<Mapper_ptr>();
@@ -29,6 +30,7 @@ void CountCube::add(const sequence_t & block, size_type & classNum,
         //TRACE(("New Block Mapper\n"));
         blockMappers.push_back(boost::shared_ptr<Mapper>(new Mapper()));
         
+        numClasses++;
         // also calculate the max offset size in bits
         // number of possible blocks for this class
         size_type nOffsets = num_offsets(c, ARITY, BLOCK_SIZE);
@@ -67,6 +69,7 @@ void CountCube::add(const sequence_t & block, size_type & classNum,
         CountEntry ce = CountEntry(block, ARITY);
         count_table->push_back(ce);
         _size += ce.size();
+        numOffsets++;
     }
     
     // by this point it's already in the table...

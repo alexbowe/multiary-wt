@@ -18,6 +18,8 @@ private:
     const size_type BLOCK_SIZE;
     
     size_type _size;
+    size_type numClasses;
+    size_type numOffsets;
     
     // Dimensions: [Class][Offset]([Symbol][Position])
     // maybe should use boost ptr_vector
@@ -59,6 +61,10 @@ public:
     {
         return offset_size_table[classNum];
     }
+    inline size_type getNumClasses()
+    { return numClasses; }
+    inline size_type getNumOffsets()
+    { return numOffsets; }
 };
 
 inline size_type num_offsets(const sequence_t & classNums, size_type arity, size_type blocksize)

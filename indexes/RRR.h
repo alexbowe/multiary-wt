@@ -74,6 +74,8 @@ public:
     }
     inline void seal() { countCube.seal(); }
     inline size_type size() { return sizeof(*this) + countCube.size(); }
+    inline size_type getNumClasses() { return countCube.getNumClasses(); }
+    inline size_type getNumOffsets() { return countCube.getNumOffsets(); }
 };
 
 } // end of namespace
