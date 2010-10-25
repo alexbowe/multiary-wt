@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# usage: ./scripts/getstats.sh results/fc-rrr/ > results/filestats.csv
+
 echo 'type,size,length,sigma'
 for file in $1*/*MB.bwt.1
 do
