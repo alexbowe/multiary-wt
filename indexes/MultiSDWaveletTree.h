@@ -1,5 +1,5 @@
-#ifndef M_RRR_WAVELETTREE_H
-#define M_RRR_WAVELETTREE_H
+#ifndef M_SD_WAVELETTREE_H
+#define M_SD_WAVELETTREE_H
 
 #include <string>
 #include <vector>
@@ -20,7 +20,7 @@ namespace cds = cds_static;
 namespace indexes
 {
 
-typedef struct node_struct
+typedef struct sd_node_struct
 {
     typedef boost::shared_array<uint> count_t;
     typedef boost::shared_ptr<cds::BitSequenceSDArray> sdseq_ptr;
