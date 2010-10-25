@@ -1,7 +1,5 @@
 #!/bin/bash
 
-re=''
-
 for file in $1*/arity*/*
 do
     RUN=`echo $file | sed -E 's/.*([0-9])$/\1/'`

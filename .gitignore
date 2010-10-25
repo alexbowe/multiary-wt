@@ -9,7 +9,7 @@ data/*
 ## Compiled stuff ##
 *.a
 *.o
-main
+*.pyc
 wt_test
 runtests
 
