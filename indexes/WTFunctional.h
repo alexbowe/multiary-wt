@@ -76,13 +76,13 @@ class SymbolEncoder
     
 public:
     SymbolEncoder(const enc_sequence_t & alphabet, size_type arity,
-        size_type left, size_type right);
+        size_type left = 0, size_type right = 0);
     symbol_t operator()(T input) const;
 };
 
 template <class T>
 SymbolEncoder<T>::SymbolEncoder(const enc_sequence_t & alphabet, 
-    size_type arity, size_type left = 0, size_type right = 0):
+    size_type arity, size_type left, size_type right):
     ALPHABET(alphabet), ARITY(arity), LEFT(left),
     RIGHT((right)?right:alphabet.size() - 1) { }
 
