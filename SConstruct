@@ -2,12 +2,17 @@ import os
 
 # NOTE: uncomment -save-temps to examine ASM code...
 # swithced to c++0x because of libcds
-BASE_FLAGS = '-std=c++0x -Wall -Wextra' # + ' -save-temps' # -ansi -pedantic
+BASE_FLAGS = '-Wall -Wextra' + ' -std=c++0x' #+ ' -save-temps' # -ansi -pedantic
 DEBUG_FLAGS = BASE_FLAGS + ' -g'
 RELEASE_FLAGS = BASE_FLAGS + ' -DNDEBUG -O3' #-pg
 
 env = Environment(ENV=os.environ)
 Export('env')
+
+# Getting OS env variables for use with Clang static analyser scan-build
+env["CC"] = os.getenv("CC") or env["CC"]
+env["CXX"] = os.getenv("CXX") or env["CXX"]
+env["ENV"].update(x for x in os.environ.items() if x[0].startswith("CCC_"))
 
 # Debug flags: > scons debug=0 to turn debugging off
 # Support for multiple debug levels if required

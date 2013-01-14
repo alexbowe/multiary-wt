@@ -32,10 +32,10 @@ private:
     size_type seq_size;
     
     void encodeNodeRecursive(const wt_sequence_t & sequence,
-        size_type left, size_type right, size_type nodeIdx);
+        size_type left, size_type right, size_type nodeIdx = 0);
     
     size_type rankRecursive(T symbol, size_type index,
-        size_type left, size_type right, size_type nodeIdx) const;
+        size_type left, size_type right, size_type nodeIdx = 0) const;
 public:
     SimpleWaveletTree(const wt_sequence_t & sequence, size_type arity);
     inline size_type rank(T symbol, size_type index) const
@@ -111,7 +111,7 @@ inline size_type simpleRank(size_type sym, size_type pos, const dynamic_bitset<>
 
 template <class T>
 void SimpleWaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
-    size_type left, size_type right, size_type nodeIdx = 0)
+    size_type left, size_type right, size_type nodeIdx)
 {
     SymbolEncoder<T> enc(ALPHABET, ARITY, left, right);
     
@@ -161,7 +161,7 @@ void SimpleWaveletTree<T>::encodeNodeRecursive(const wt_sequence_t & sequence,
 
 template <class T>
 size_type SimpleWaveletTree<T>::rankRecursive(T symbol, size_type pos,
-    size_type left, size_type right, size_type nodeIdx = 0) const
+    size_type left, size_type right, size_type nodeIdx) const
 {
     myAssert(nodeIdx < encoding.size());
     
