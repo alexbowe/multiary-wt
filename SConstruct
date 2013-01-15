@@ -23,11 +23,11 @@ if int(debug_level) > 0:
 env.Append(CCFLAGS = flags.split())
 
 # Other flags
-env.Append(LIBPATH=[ "./", "deps/libcds-v1.0.2/lib" ])
+env.Append(LIBPATH=[ "./", "deps/libcds/lib" ])
 env.Append(CPPPATH=[ "./", "deps",
                      "deps/boost_1_43_0",
                      "deps/tclap-1.2.0/include",
-                     "deps/libcds-v1.0.2/includes"])
+                     "deps/libcds/includes"])
 
 # Libs
 env.StaticLibrary(target = "Indexes", source = env.Glob("indexes/*.cc"),
